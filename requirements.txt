@@ -1,0 +1,9 @@
+fastapi[all]
+python-multipart
+uvicorn[standard]
+pandas
+numpy
+scikit-learn
+scikit-survival
+rpy2
+
