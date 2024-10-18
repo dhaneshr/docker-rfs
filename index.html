@@ -113,6 +113,11 @@
         </div>
 
         <div class="form-group">
+            <label for="predat">Time Horizon (Days):</label>
+            <input type="number" id="predat" name="predat" min="50" required>
+        </div>
+
+        <div class="form-group">
             <label for="ch">CH (Y/N):</label>
             <select id="ch" name="ch" required>
                 <option value="Y">Y</option>
@@ -150,7 +155,8 @@
                 hgb: parseFloat(document.getElementById('hgb').value),
                 clinstg: parseInt(document.getElementById('clinstg').value),
                 ch: document.getElementById('ch').value,
-                rt: document.getElementById('rt').value
+                rt: document.getElementById('rt').value,
+                predict_at: parseInt(document.getElementById('predat').value)
             };
 
             console.log("Form Data:", formData); // Debugging: Log the form data

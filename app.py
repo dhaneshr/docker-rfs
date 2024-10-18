@@ -72,6 +72,7 @@ def initialize_db():
                 clinstg INTEGER,
                 ch TEXT,
                 rt TEXT,
+                predict_at INTEGER,
                 prediction TEXT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
@@ -93,6 +94,7 @@ class ModelInput(BaseModel):
     clinstg: int = Field(..., ge=1)
     ch: str = Field(..., pattern='^[YN]$')
     rt: str = Field(..., pattern='^[YN]$')
+    predict_at: int = Field(..., ge=0, le=1000)
 
 # Define the prediction endpoint
 @app.post("/predict")
@@ -104,7 +106,8 @@ def predict(input: ModelInput, db: sqlite3.Connection = Depends(get_db)):
             'hgb': [input.hgb],
             'clinstg': [input.clinstg],
             'ch': [input.ch],
-            'rt': [input.rt]
+            'rt': [input.rt],
+            'predict_at':[input.predict_at]
         })
 
         logger.info("Input data:\n%s", new_data)
@@ -119,25 +122,52 @@ def predict(input: ModelInput, db: sqlite3.Connection = Depends(get_db)):
         predict_func = robjects.r('predict')
         predictions = predict_func(r_env['follic_obj'], newdata=r_env['r_new_data'])
         predicted_values = predictions.rx2('predicted')
+        cif = predictions.rx2('cif')
+        chf = predictions.rx2('chf')
+        logger.info(f"CIF shape: {cif.shape}")
+        logger.info(f"CHF shape: {chf.shape}")
+
+
+                
+        # Extract the time points of interest from the predictions
+        time_interest = np.array(predictions.rx2('time.interest'))
+
+        # Find the index of the time point closest to 25
+        time_point = new_data['predict_at'].values[0]
+        time_index_python = np.argmin(np.abs(time_interest - time_point))  # Find the closest time point
+
+        # Now extract CIF and CHF values using the correct index
+        cif_event1_at_time = cif[0, time_index_python, 0]  
+        cif_event2_at_time = cif[0, time_index_python, 1]  
+        chf_event1_at_time = chf[0, time_index_python, 0]  
+        chf_event2_at_time = chf[0, time_index_python, 1]  
+
+        logger.info(f"CIF event 1 at time {time_point}: {cif_event1_at_time}")
+        logger.info(f"CIF event 2 at time {time_point}: {cif_event2_at_time}")
+        logger.info(f"CHF event 1 at time {time_point}: {chf_event1_at_time}")
+        logger.info(f"CHF event 2 at time {time_point}: {chf_event2_at_time}")
+
+
         predicted_array = np.array(predicted_values)
         predicted_df = pd.DataFrame(predicted_array, columns=["event.1", "event.2"])
         prediction_result = predicted_df.to_dict(orient='records')
-
         logger.info("Prediction result:\n%s", prediction_result)
 
         # Insert prediction into database
         try:
             cursor = db.cursor()
             cursor.execute('''
-                INSERT INTO predictions (age, hgb, clinstg, ch, rt, prediction)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO predictions (age, hgb, clinstg, ch, rt, predict_at, prediction)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             ''', (
                 input.age,
                 input.hgb,
                 input.clinstg,
                 input.ch,
                 input.rt,
+                input.predict_at,
                 json.dumps(prediction_result)
+                
             ))
             db.commit()
             logger.info("Prediction inserted into database.")
@@ -162,7 +192,7 @@ def get_logs(db: sqlite3.Connection = Depends(get_db)):
 
         logs = []
         for row in rows:
-            prediction_data = json.loads(row[6])  # Convert prediction string back to JSON
+            prediction_data = json.loads(row[7])  # Convert prediction string back to JSON
             log_entry = {
                 "id": row[0],
                 "age": row[1],
@@ -170,8 +200,9 @@ def get_logs(db: sqlite3.Connection = Depends(get_db)):
                 "clinstg": row[3],
                 "ch": row[4],
                 "rt": row[5],
+                "predict_at": row[6],
                 "prediction": prediction_data,
-                "timestamp": row[7]
+                "timestamp": row[8]
             }
             logs.append(log_entry)
 
