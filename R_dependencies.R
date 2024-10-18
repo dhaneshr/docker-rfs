@@ -1,6 +1,6 @@
 # R_dependencies.R
 
-options(repos = c(CRAN = "https://cloud.r-project.org"))
+options(repos = c(CRAN = "https://packagemanager.rstudio.com/all/latest"))
 
 install.packages("randomForestSRC", dependencies=TRUE)
 install.packages("scales", dependencies=TRUE)
