@@ -4,111 +4,138 @@
 <head>
     <meta charset="UTF-8">
     <title>Risk Predictor Tool</title>
-    <!-- Include Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Include Alpine.js -->
     <script src="//unpkg.com/alpinejs" defer></script>
-    <!-- Include Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen">
-
-    <!-- Top Banner Section -->
-    <header class="bg-cover bg-center text-white py-16" 
-        style="background-image: url('/resources/banner.png');">
-        <div class="max-w-3xl mx-auto text-center">
-            <h1 class="text-5xl font-extrabold mb-4">Risk Predictor Tool</h1>
+    <header class="bg-cover bg-center text-white py-8" style="background-image: url('/resources/banner.png');">
+        <div class="max-w-2xl mx-auto text-center">
+            <h1 class="text-4xl font-extrabold mb-4">Risk Predictor Tool</h1>
             <p class="text-lg italic">Predicted Risk Calculator for Illustrative Purposes Only</p>
         </div>
     </header>
 
-    <!-- Main Content Section -->
-    <main class="flex-grow max-w-3xl mx-auto px-4 py-8" x-data="patientForm()">
-        <form @submit.prevent="handleSubmit" class="bg-white p-8 rounded-xl shadow-lg">
-            <h2 class="text-3xl font-extrabold mb-8 text-center text-blue-600">Enter Patient Information</h2>
 
-            <div class="mb-6">
-                <label for="patientId" class="block text-gray-700 font-medium mb-2">Patient ID:</label>
-                <input type="text" id="patientId" x-model="formData.patientId" required 
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-6">
-                <label for="hospitalId" class="block text-gray-700 font-medium mb-2">Hospital ID:</label>
-                <input type="text" id="hospitalId" x-model="formData.hospitalId" required 
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-6">
-                <label for="date" class="block text-gray-700 font-medium mb-2">Date:</label>
-                <input type="date" id="date" x-model="formData.date" required 
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-6">
-                <label for="age" class="block text-gray-700 font-medium mb-2">Age:</label>
-                <input type="number" id="age" x-model.number="formData.age" min="0" max="120" required 
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-6">
-                <label for="hgb" class="block text-gray-700 font-medium mb-2">Hemoglobin Level:</label>
-                <input type="number" id="hgb" x-model.number="formData.hgb" min="0" step="0.1" required 
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-6">
-                <label for="clinstg" class="block text-gray-700 font-medium mb-2">Clinical Stage:</label>
-                <input type="number" id="clinstg" x-model.number="formData.clinstg" min="1" required 
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-6">
-                <label for="predat" class="block text-gray-700 font-medium mb-2">Time Horizon (Days):</label>
-                <input type="number" id="predat" x-model.number="formData.predat" min="50" required 
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="mb-6">
-                <label for="ch" class="block text-gray-700 font-medium mb-2">CH (Y/N):</label>
-                <select id="ch" x-model="formData.ch" required 
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option value="Y">Y</option>
-                    <option value="N">N</option>
-                </select>
-            </div>
-
-            <div class="mb-6">
-                <label for="rt" class="block text-gray-700 font-medium mb-2">RT (Y/N):</label>
-                <select id="rt" x-model="formData.rt" required 
-                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    <option value="Y">Y</option>
-                    <option value="N">N</option>
-                </select>
-            </div>
-
-            <div class="flex space-x-4">
-                <button type="submit" class="w-1/2 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">Submit</button>
-                <button type="reset" @click="resetForm" class="w-1/2 bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 focus:ring-2 focus:ring-red-400">Reset</button>
-            </div>
-        </form>
-
-        <div class="mt-12 bg-white p-8 rounded-xl shadow-lg" x-show="predictions.length > 0">
-            <h2 class="text-2xl font-bold mb-6 text-center text-green-600">Prediction Results</h2>
-            <canvas id="resultChart"></canvas>
+    <main class="flex-grow max-w-6xl mx-auto px-4 py-4 flex space-x-8" x-data="patientForm()">
+        <!-- Form Section (Left) -->
+        <div class="w-1/2 bg-white p-8 rounded-xl shadow-lg">
+            <form @submit.prevent="handleSubmit">
+                <h2 class="text-3xl font-extrabold mb-8 text-center text-blue-600">Enter Patient Information</h2>
+    
+                <div class="mb-6">
+                    <label for="patientId" class="block text-gray-700 font-medium mb-2">Patient ID:</label>
+                    <input type="text" id="patientId" x-model="formData.patientId" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+    
+                <div class="mb-6">
+                    <label for="hospitalId" class="block text-gray-700 font-medium mb-2">Hospital ID:</label>
+                    <input type="text" id="hospitalId" x-model="formData.hospitalId" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+    
+                <div class="mb-6">
+                    <label for="age" class="block text-gray-700 font-medium mb-2">Age:</label>
+                    <input type="number" id="age" x-model.number="formData.age" min="0" max="120" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+    
+                <div class="mb-6">
+                    <label for="hgb" class="block text-gray-700 font-medium mb-2">Hemoglobin Level:</label>
+                    <input type="number" id="hgb" x-model.number="formData.hgb" min="0" step="0.1" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+    
+                <div class="mb-6">
+                    <label for="clinstg" class="block text-gray-700 font-medium mb-2">Clinical Stage:</label>
+                    <input type="number" id="clinstg" x-model.number="formData.clinstg" min="1" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+    
+                <div class="mb-6">
+                    <label for="predict_at" class="block text-gray-700 font-medium mb-2">Prediction Time Horizon (Days):</label>
+                    <input type="number" id="predict_at" x-model.number="formData.predict_at" min="0" required
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+    
+                <div class="mb-6">
+                    <label for="ch" class="block text-gray-700 font-medium mb-2">CH (Y/N):</label>
+                    <select id="ch" x-model="formData.ch" required
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="Y">Yes</option>
+                        <option value="N">No</option>
+                    </select>
+                </div>
+    
+                <div class="mb-6">
+                    <label for="rt" class="block text-gray-700 font-medium mb-2">RT (Y/N):</label>
+                    <select id="rt" x-model="formData.rt" required
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="Y">Yes</option>
+                        <option value="N">No</option>
+                    </select>
+                </div>
+    
+                <div class="flex space-x-4">
+                    <button type="submit"
+                            class="w-1/2 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+                        Submit
+                    </button>
+                    <button type="reset" @click="resetForm"
+                            class="w-1/2 bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 focus:ring-2 focus:ring-red-400">
+                        Reset
+                    </button>
+                </div>
+            </form>
         </div>
+    
+        <!-- Chart Section (Right) -->
+        <div class="w-1/2">
+            <div class="mt-8" x-show="cifSeries.length > 0 || chfSeries.length > 0">
+                <h2 class="text-2xl font-bold text-center text-blue-600 mb-4">Cumulative Charts</h2>
+                <canvas id="cifChart" class="mb-4"></canvas>
+                <canvas id="chfChart" class="mb-8"></canvas>
+        
+                <!-- Display Event Values Below the Charts as a Table -->
 
-        <div class="mt-12 text-center text-gray-600 text-sm">
-            <p class="italic">
-                The predictions provided by this tool are for illustrative purposes only. They should not be used for real-world medical decisions. We assume no responsibility for any misuse of this tool or its predictions.
-            </p>
-        </div>
+    <div id="eventValues" class="text-left px-4">
+        <h2 class="text-xl font-bold text-blue-600 mb-4">Prediction Results</h2>
+
+        <table class="table-auto border-collapse border border-gray-400 w-full text-lg">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border border-gray-300 px-4 py-2 text-left" colspan="3">
+                        Predictions at Time Point: <span id="computedTimePoint"></span>
+                    </th>
+                </tr>
+                <tr class="bg-gray-100">
+                    <th class="border border-gray-300 px-4 py-2 text-left">Event</th>
+                    <th class="border border-gray-300 px-4 py-2 text-center">CIF</th>
+                    <th class="border border-gray-300 px-4 py-2 text-center">CHF</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Relapse</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent1"></td>
+                    <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent1"></td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Death</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent2"></td>
+                    <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent2"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+        
+        
     </main>
-
-    <footer class="bg-gray-900 text-white text-center py-4">
-        <p>&copy; 2024 Risk Predictor Tool. Vector Institute of AI. All Rights Reserved.</p>
-    </footer>
+    
 
     <script>
         function patientForm() {
@@ -116,51 +143,69 @@
                 formData: {
                     patientId: '',
                     hospitalId: '',
-                    date: '',
                     age: null,
                     hgb: null,
                     clinstg: null,
-                    predat: null,
+                    predict_at: null,     // Correct key
                     ch: 'Y',
                     rt: 'Y'
                 },
-                predictions: [],
-                chart: null,
-
-                handleSubmit() {
-                    const dataToSend = { ...this.formData, predict_at: this.formData.predat };
-
-                    fetch('http://localhost:8000/predict', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(dataToSend)
-                    })
-                        .then(response => response.json())
-                        .then(result => {
-                            if (result.predictions) {
-                                this.predictions = result.predictions;
-                                this.renderChart();
-                            } else {
-                                alert(`Error: ${result.detail}`);
-                            }
-                        })
-                        .catch(error => alert('An error occurred.'));
+                cifSeries: [],
+                chfSeries: [],
+                cifChartInstance: null,  // Store CIF Chart instance
+                chfChartInstance: null,  // Store CHF Chart instance
+                async handleSubmit() {
+                    // Frontend Validation
+                    if (!this.formData.patientId || !this.formData.hospitalId || this.formData.predict_at === null) {
+                        alert('Please fill in all required fields.');
+                        return;
+                    }
+    
+                    try {
+                        const response = await fetch('http://localhost:8000/predict', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.formData)
+                        });
+    
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.detail || 'Prediction failed');
+                        }
+    
+                        const result = await response.json();
+                        console.log('API Response:', result);
+    
+                        this.cifSeries = result.cif_series;
+                        this.chfSeries = result.chf_series;
+                        this.renderCharts();
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert(`An error occurred: ${error.message}`);
+                    }
                 },
+                renderCharts() {
+                    this.renderChart('cifChart', 'CIF', this.cifSeries, 'cifChartInstance');
+                    this.renderChart('chfChart', 'CHF', this.chfSeries, 'chfChartInstance');
+                },
+                renderChart(canvasId, label, data, instanceProperty) {
+                    // Destroy existing chart instance if it exists
+                    if (this[instanceProperty]) {
+                        this[instanceProperty].destroy();
+                    }
 
-                renderChart() {
-                    const ctx = document.getElementById('resultChart').getContext('2d');
-                    if (this.chart) this.chart.destroy();
-
-                    this.chart = new Chart(ctx, {
-                        type: 'bar',
+                    const ctx = document.getElementById(canvasId).getContext('2d');
+                    this[instanceProperty] = new Chart(ctx, {
+                        type: 'line',
                         data: {
-                            labels: Object.keys(this.predictions[0]),
+                            labels: data.map((_, i) => `T${i + 1}`),
                             datasets: [{
-                                label: 'Prediction (in Days)',
-                                data: Object.values(this.predictions[0]),
-                                backgroundColor: ['#3B82F6', '#10B981'],
-                                borderColor: ['#1E3A8A', '#065F46'],
-                                borderWidth: 1
+                                label,
+                                data,
+                                borderColor: '#3B82F6',
+                                borderWidth: 2,
+                                pointRadius: 0,       // No points on the line
+                                pointHoverRadius: 0   // No hover effect on points
                             }]
                         },
                         options: {
@@ -172,24 +217,68 @@
                     });
                 },
 
+
+                async handleSubmit() {
+                    if (!this.formData.patientId || !this.formData.hospitalId || this.formData.predict_at === null) {
+                        alert('Please fill in all required fields.');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch('http://localhost:8000/predict', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.formData)
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.detail || 'Prediction failed');
+                        }
+
+                        const result = await response.json();
+                        console.log('API Response:', result);
+
+                        // Store and Render Charts
+                        this.cifSeries = result.cif_series;
+                        this.chfSeries = result.chf_series;
+                        this.renderCharts();
+
+                        // Populate the table with event values
+                        document.getElementById('computedTimePoint').textContent = this.formData.predict_at;
+                        document.getElementById('cifEvent1').textContent = result.cif_event1.toFixed(4);
+                        document.getElementById('cifEvent2').textContent = result.cif_event2.toFixed(4);
+                        document.getElementById('chfEvent1').textContent = result.chf_event1.toFixed(4);
+                        document.getElementById('chfEvent2').textContent = result.chf_event2.toFixed(4);
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert(`An error occurred: ${error.message}`);
+                    }
+                },
+
+
+
                 resetForm() {
                     this.formData = {
                         patientId: '',
                         hospitalId: '',
-                        date: '',
                         age: null,
                         hgb: null,
                         clinstg: null,
-                        predat: null,
+                        predict_at: null,  // Correct key
                         ch: 'Y',
                         rt: 'Y'
                     };
-                    this.predictions = [];
-                    if (this.chart) this.chart.destroy();
+                    this.cifSeries = [];
+                    this.chfSeries = [];
+                    // Destroy existing chart instances
+                    if (this.cifChartInstance) this.cifChartInstance.destroy();
+                    if (this.chfChartInstance) this.chfChartInstance.destroy();
                 }
-            }
+            };
         }
     </script>
+    
 </body>
 
 </html>
