@@ -1,18 +1,10 @@
-# # Use an Ubuntu base image
-# FROM ubuntu:22.04
+# Use a base image with R version 4.3.3
 FROM rocker/r-ver:4.3.3
 
-# Set environment variables to avoid user interaction during package installs
+# Set environment variables to avoid interactive prompts during package installs
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Create a directory for data storage
-RUN mkdir /data
-
-# Optional: Set appropriate permissions
-RUN chmod 755 /data
-
-
-# Install system dependencies
+# Install system dependencies and Miniconda
 RUN apt-get update && apt-get install -y \
     build-essential \
     gfortran \
@@ -31,39 +23,36 @@ RUN apt-get update && apt-get install -y \
     libgfortran5 \
     python3-pip \
     wget \
+    && wget https://repo.anaconda.com/miniconda/Miniconda3-py310_24.7.1-0-Linux-x86_64.sh -O /miniconda.sh \
+    && bash /miniconda.sh -b -p /opt/conda \
+    && rm /miniconda.sh \
     && rm -rf /var/lib/apt/lists/*
 
-
-# Install Miniconda
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py310_24.7.1-0-Linux-x86_64.sh -O /miniconda.sh && \
-    bash /miniconda.sh -b -p /opt/conda && \
-    rm /miniconda.sh
-
-# Add conda to PATH
+# Add Conda to the PATH
 ENV PATH="/opt/conda/bin:$PATH"
 
-# Create a new conda environment
-RUN conda create -n fastapi-env python=3.10 -y
-
-# Copy requirements.txt before installing dependencies
+# Create a new conda environment and install Python dependencies
 COPY requirements.txt /app/requirements.txt
+RUN conda create -n fastapi-env python=3.10 -y \
+    && conda run -n fastapi-env pip install -r /app/requirements.txt
 
-# Activate the environment and install Python dependencies, including PyTorch
-RUN /bin/bash -c "source activate fastapi-env && \
-    pip install -r /app/requirements.txt"
+# Install R dependencies using R script
+COPY R_dependencies.R /app/R_dependencies.R
+RUN Rscript /app/R_dependencies.R
 
-# Install R packages
-COPY R_dependencies.R /R_dependencies.R
-RUN Rscript /R_dependencies.R
-
-# Set the working directory
+# Set the working directory and copy necessary files
 WORKDIR /app
+COPY app.py /app/
+COPY follic_model.RData /app/
+COPY resources/ /app/resources/
+COPY templates/ /app/templates/
+COPY local_data /app/local_data
 
-# Copy the entire app directory (including app.py and R model)
-COPY . /app
+# Set permissions for the `resources` and `local_data` directories
+RUN chmod -R 755 /app/resources /app/local_data
 
 # Expose the port FastAPI will run on
 EXPOSE 8000
 
 # Command to run the FastAPI app
-CMD ["bash", "-c", "source activate fastapi-env && uvicorn app:app --host 0.0.0.0 --port 8000"]
+CMD ["conda", "run", "--no-capture-output", "-n", "fastapi-env", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
