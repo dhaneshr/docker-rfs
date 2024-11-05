@@ -3,19 +3,70 @@
 
 <head>
     <meta charset="UTF-8">
-    <title></title>
+    <title>Patient Risk Prediction</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen">
     <header class="bg-cover bg-center text-white py-8" style="background-image: url('/resources/banner.png');">
         <div class="max-w-2xl mx-auto text-center">
-
+            <h1 class="text-4xl font-bold">Patient Risk Prediction Tool</h1>
         </div>
     </header>
-
 
     <main class="flex-grow max-w-6xl mx-auto px-4 py-4 flex space-x-8" x-data="patientForm()">
        <!-- Form Section (Left) -->
@@ -25,57 +76,153 @@
 
                 <div class="grid grid-cols-2 gap-6">
                     <div>
-                        <label for="patientId" class="block text-gray-700 font-medium mb-2">Patient ID:</label>
-                        <input type="text" id="patientId" x-model="formData.patientId" required 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="hospitalId" class="block text-gray-700 font-medium mb-2">Hospital ID:</label>
-                        <input type="text" id="hospitalId" x-model="formData.hospitalId" required 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
                         <label for="age" class="block text-gray-700 font-medium mb-2">Age:</label>
                         <input type="number" id="age" x-model.number="formData.age" min="0" max="120" required 
                             class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     <div>
-                        <label for="hgb" class="block text-gray-700 font-medium mb-2">Hemoglobin Level:</label>
-                        <input type="number" id="hgb" x-model.number="formData.hgb" min="0" step="0.1" required 
+                        <label for="sex_f" class="block text-gray-700 font-medium mb-2">Sex (Female: 0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="sex_f" x-model="formData.sex_f">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="elective_adm" class="block text-gray-700 font-medium mb-2">Elective Admission (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="elective_adm" x-model="formData.elective_adm">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="homelessness" class="block text-gray-700 font-medium mb-2">Homelessness (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="homelessness" x-model="formData.homelessness">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="peripheral_AD" class="block text-gray-700 font-medium mb-2">Peripheral Arterial Disease (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="peripheral_AD" x-model="formData.peripheral_AD">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="coronary_AD" class="block text-gray-700 font-medium mb-2">Coronary Artery Disease (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="coronary_AD" x-model="formData.coronary_AD">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="stroke" class="block text-gray-700 font-medium mb-2">Stroke (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="stroke" x-model="formData.stroke">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="CHF" class="block text-gray-700 font-medium mb-2">Congestive Heart Failure (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="CHF" x-model="formData.CHF">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="hypertension" class="block text-gray-700 font-medium mb-2">Hypertension (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="hypertension" x-model="formData.hypertension">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="COPD" class="block text-gray-700 font-medium mb-2">COPD (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="COPD" x-model="formData.COPD">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="CKD" class="block text-gray-700 font-medium mb-2">CKD (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="CKD" x-model="formData.CKD">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="malignancy" class="block text-gray-700 font-medium mb-2">Malignancy (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="malignancy" x-model="formData.malignancy">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="mental_illness" class="block text-gray-700 font-medium mb-2">Mental Illness (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="mental_illness" x-model="formData.mental_illness">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="creatinine" class="block text-gray-700 font-medium mb-2">Creatinine Level:</label>
+                        <input type="number" id="creatinine" x-model.number="formData.creatinine" min="0" step="0.1" 
                             class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
 
                     <div>
-                        <label for="clinstg" class="block text-gray-700 font-medium mb-2">Clinical Stage:</label>
-                        <input type="number" id="clinstg" x-model.number="formData.clinstg" min="1" required 
+                        <label for="Hb_A1C" class="block text-gray-700 font-medium mb-2">Hb A1C Level:</label>
+                        <input type="number" id="Hb_A1C" x-model.number="formData.Hb_A1C" min="0" step="0.1" 
                             class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label for="albumin" class="block text-gray-700 font-medium mb-2">Albumin Level:</label>
+                        <input type="number" id="albumin" x-model.number="formData.albumin" min="0" step="0.1" 
+                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div>
+                        <label for="Hb_A1C_missing" class="block text-gray-700 font-medium mb-2">Hb A1C Missing (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="Hb_A1C_missing" x-model="formData.Hb_A1C_missing">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="creatinine_missing" class="block text-gray-700 font-medium mb-2">Creatinine Missing (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="creatinine_missing" x-model="formData.creatinine_missing">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label for="albumin_missing" class="block text-gray-700 font-medium mb-2">Albumin Missing (0/1):</label>
+                        <label class="switch">
+                            <input type="checkbox" id="albumin_missing" x-model="formData.albumin_missing">
+                            <span class="slider round"></span>
+                        </label>
                     </div>
 
                     <div>
                         <label for="predict_at" class="block text-gray-700 font-medium mb-2">Prediction Time Horizon (Days):</label>
                         <input type="number" id="predict_at" x-model.number="formData.predict_at" min="0" required 
                             class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="ch" class="block text-gray-700 font-medium mb-2">CH (Y/N):</label>
-                        <select id="ch" x-model="formData.ch" required 
-                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="Y">Yes</option>
-                            <option value="N">No</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="rt" class="block text-gray-700 font-medium mb-2">RT (Y/N):</label>
-                        <select id="rt" x-model="formData.rt" required 
-                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="Y">Yes</option>
-                            <option value="N">No</option>
-                        </select>
                     </div>
                 </div>
 
@@ -90,65 +237,72 @@
             </form>
         </div>
 
-    
         <!-- Chart Section (Right) -->
         <div class="w-1/2">
             <div class="mt-8" x-show="cifSeries.length > 0 || chfSeries.length > 0">
                 <h2 class="text-2xl font-bold text-center text-blue-600 mb-4">Cumulative Charts</h2>
                 <canvas id="cifChart" class="mb-4"></canvas>
                 <canvas id="chfChart" class="mb-8"></canvas>
-        
+
                 <!-- Display Event Values Below the Charts as a Table -->
+                <div id="eventValues" class="text-left px-4">
+                    <h2 class="text-xl font-bold text-blue-600 mb-4">Prediction Results</h2>
 
-    <div id="eventValues" class="text-left px-4">
-        <h2 class="text-xl font-bold text-blue-600 mb-4">Prediction Results</h2>
-
-        <table class="table-auto border-collapse border border-gray-400 w-full text-lg">
-            <thead>
-                <tr class="bg-gray-100">
-                    <th class="border border-gray-300 px-4 py-2 text-left" colspan="3">
-                        Predictions at Time Point: <span id="computedTimePoint"></span>
-                    </th>
-                </tr>
-                <tr class="bg-gray-100">
-                    <th class="border border-gray-300 px-4 py-2 text-left">Event</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">CIF</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">CHF</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Relapse</td>
-                    <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent1"></td>
-                    <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent1"></td>
-                </tr>
-                <tr>
-                    <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Death</td>
-                    <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent2"></td>
-                    <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent2"></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-
-        
-        
+                    <table class="table-auto border-collapse border border-gray-400 w-full text-lg">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-300 px-4 py-2 text-left" colspan="3">
+                                    Predictions at Time Point: <span id="computedTimePoint"></span>
+                                </th>
+                            </tr>
+                            <tr class="bg-gray-100">
+                                <th class="border border-gray-300 px-4 py-2 text-left">Event</th>
+                                <th class="border border-gray-300 px-4 py-2 text-center">CIF</th>
+                                <th class="border border-gray-300 px-4 py-2 text-center">CHF</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Relapse</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent1"></td>
+                                <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent1"></td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Death</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent2"></td>
+                                <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent2"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </main>
-    
 
     <script>
         function patientForm() {
             return {
                 formData: {
-                    patientId: '',
-                    hospitalId: '',
                     age: null,
-                    hgb: null,
-                    clinstg: null,
-                    predict_at: null,     // Correct key
-                    ch: 'Y',
-                    rt: 'Y'
+                    sex_f: 0,
+                    elective_adm: 0,
+                    homelessness: 0,
+                    peripheral_AD: 0,
+                    coronary_AD: 0,
+                    stroke: 0,
+                    CHF: 0,
+                    hypertension: 0,
+                    COPD: 0,
+                    CKD: 0,
+                    malignancy: 0,
+                    mental_illness: 0,
+                    creatinine: null,
+                    Hb_A1C: null,
+                    albumin: null,
+                    Hb_A1C_missing: 0,
+                    creatinine_missing: 0,
+                    albumin_missing: 0,
+                    predict_at: null
                 },
                 cifSeries: [],
                 chfSeries: [],
@@ -156,29 +310,54 @@
                 chfChartInstance: null,  // Store CHF Chart instance
                 async handleSubmit() {
                     // Frontend Validation
-                    if (!this.formData.patientId || !this.formData.hospitalId || this.formData.predict_at === null) {
+                    if (this.formData.age === null || this.formData.predict_at === null) {
                         alert('Please fill in all required fields.');
                         return;
                     }
-    
+
+                    // Convert checkboxes to 0 or 1 before sending
+                    this.formData.sex_f = this.formData.sex_f ? 1 : 0;
+                    this.formData.elective_adm = this.formData.elective_adm ? 1 : 0;
+                    this.formData.homelessness = this.formData.homelessness ? 1 : 0;
+                    this.formData.peripheral_AD = this.formData.peripheral_AD ? 1 : 0;
+                    this.formData.coronary_AD = this.formData.coronary_AD ? 1 : 0;
+                    this.formData.stroke = this.formData.stroke ? 1 : 0;
+                    this.formData.CHF = this.formData.CHF ? 1 : 0;
+                    this.formData.hypertension = this.formData.hypertension ? 1 : 0;
+                    this.formData.COPD = this.formData.COPD ? 1 : 0;
+                    this.formData.CKD = this.formData.CKD ? 1 : 0;
+                    this.formData.malignancy = this.formData.malignancy ? 1 : 0;
+                    this.formData.mental_illness = this.formData.mental_illness ? 1 : 0;
+                    this.formData.Hb_A1C_missing = this.formData.Hb_A1C_missing ? 1 : 0;
+                    this.formData.creatinine_missing = this.formData.creatinine_missing ? 1 : 0;
+                    this.formData.albumin_missing = this.formData.albumin_missing ? 1 : 0;
+
                     try {
                         const response = await fetch('http://localhost:8000/predict', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(this.formData)
                         });
-    
+
                         if (!response.ok) {
                             const errorData = await response.json();
                             throw new Error(errorData.detail || 'Prediction failed');
                         }
-    
+
                         const result = await response.json();
                         console.log('API Response:', result);
-    
+
+                        // Store and Render Charts
                         this.cifSeries = result.cif_series;
                         this.chfSeries = result.chf_series;
                         this.renderCharts();
+
+                        // Populate the table with event values
+                        document.getElementById('computedTimePoint').textContent = this.formData.predict_at;
+                        document.getElementById('cifEvent1').textContent = result.cif_event1.toFixed(4);
+                        document.getElementById('cifEvent2').textContent = result.cif_event2.toFixed(4);
+                        document.getElementById('chfEvent1').textContent = result.chf_event1.toFixed(4);
+                        document.getElementById('chfEvent2').textContent = result.chf_event2.toFixed(4);
                     } catch (error) {
                         console.error('Error:', error);
                         alert(`An error occurred: ${error.message}`);
@@ -216,58 +395,28 @@
                         }
                     });
                 },
-
-
-                async handleSubmit() {
-                    if (!this.formData.patientId || !this.formData.hospitalId || this.formData.predict_at === null) {
-                        alert('Please fill in all required fields.');
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch('http://localhost:8000/predict', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(this.formData)
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.detail || 'Prediction failed');
-                        }
-
-                        const result = await response.json();
-                        console.log('API Response:', result);
-
-                        // Store and Render Charts
-                        this.cifSeries = result.cif_series;
-                        this.chfSeries = result.chf_series;
-                        this.renderCharts();
-
-                        // Populate the table with event values
-                        document.getElementById('computedTimePoint').textContent = this.formData.predict_at;
-                        document.getElementById('cifEvent1').textContent = result.cif_event1.toFixed(4);
-                        document.getElementById('cifEvent2').textContent = result.cif_event2.toFixed(4);
-                        document.getElementById('chfEvent1').textContent = result.chf_event1.toFixed(4);
-                        document.getElementById('chfEvent2').textContent = result.chf_event2.toFixed(4);
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert(`An error occurred: ${error.message}`);
-                    }
-                },
-
-
-
                 resetForm() {
                     this.formData = {
-                        patientId: '',
-                        hospitalId: '',
                         age: null,
-                        hgb: null,
-                        clinstg: null,
-                        predict_at: null,  // Correct key
-                        ch: 'Y',
-                        rt: 'Y'
+                        sex_f: 0,
+                        elective_adm: 0,
+                        homelessness: 0,
+                        peripheral_AD: 0,
+                        coronary_AD: 0,
+                        stroke: 0,
+                        CHF: 0,
+                        hypertension: 0,
+                        COPD: 0,
+                        CKD: 0,
+                        malignancy: 0,
+                        mental_illness: 0,
+                        creatinine: null,
+                        Hb_A1C: null,
+                        albumin: null,
+                        Hb_A1C_missing: 0,
+                        creatinine_missing: 0,
+                        albumin_missing: 0,
+                        predict_at: null
                     };
                     this.cifSeries = [];
                     this.chfSeries = [];
