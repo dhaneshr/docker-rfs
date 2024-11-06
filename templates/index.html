@@ -3,9 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Patient Risk Prediction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limb Amputation Risk Predictor</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .switch {
@@ -43,6 +44,22 @@
             transition: .4s;
         }
 
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -70,8 +87,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            border: 12px solid #f3f3f3; /* Light grey */
-            border-top: 12px solid #3498db; /* Blue */
+            border: 12px solid #f3f3f3;
+            border-top: 12px solid #3498db;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -87,299 +104,369 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+            0% {
+                transform: rotate(0deg);
+            }
 
-
-
-        input:checked + .slider {
-            background-color: #2196F3;
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-
-        .slider.round {
-            border-radius: 34px;
-        }
-
-        .slider.round:before {
-            border-radius: 50%;
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
 
 <body class="bg-gray-50 flex flex-col min-h-screen">
-    <header class="bg-cover bg-center text-white py-8" style="background-image: url('/resources/banner.png');">
+    <header class="bg-cover bg-center text-blue py-8" style="background-image: url('/resources/banner.png');">
         <div class="max-w-2xl mx-auto text-center">
-            <h1 class="text-4xl font-bold">Patient Risk Prediction Tool</h1>
+            <h1 class="text-4xl font-bold">Limb Amputation Risk Predictor</h1>
         </div>
     </header>
 
-    <main class="flex-grow max-w-6xl mx-auto px-4 py-4 flex space-x-8" x-data="patientForm()">
-       <!-- Form Section (Left) -->
-        <div class="w-2/3 bg-white p-10 rounded-xl shadow-lg">
-            <form @submit.prevent="handleSubmit">
-                <h2 class="text-3xl font-extrabold mb-8 text-center text-blue-600">Enter Patient Information</h2>
-
-                <div class="grid grid-cols-2 gap-6">
-                    <div>
-                        <label for="age" class="block text-gray-700 font-medium mb-2">Age:</label>
-                        <input type="number" id="age" x-model.number="formData.age" min="0" max="120" required 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="sex_f" class="block text-gray-700 font-medium mb-2">Sex (Female: 0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="sex_f" x-model="formData.sex_f">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="elective_adm" class="block text-gray-700 font-medium mb-2">Elective Admission (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="elective_adm" x-model="formData.elective_adm">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="homelessness" class="block text-gray-700 font-medium mb-2">Homelessness (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="homelessness" x-model="formData.homelessness">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="peripheral_AD" class="block text-gray-700 font-medium mb-2">Peripheral Arterial Disease (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="peripheral_AD" x-model="formData.peripheral_AD">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="coronary_AD" class="block text-gray-700 font-medium mb-2">Coronary Artery Disease (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="coronary_AD" x-model="formData.coronary_AD">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="stroke" class="block text-gray-700 font-medium mb-2">Stroke (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="stroke" x-model="formData.stroke">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="CHF" class="block text-gray-700 font-medium mb-2">Congestive Heart Failure (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="CHF" x-model="formData.CHF">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="hypertension" class="block text-gray-700 font-medium mb-2">Hypertension (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="hypertension" x-model="formData.hypertension">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="COPD" class="block text-gray-700 font-medium mb-2">COPD (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="COPD" x-model="formData.COPD">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="CKD" class="block text-gray-700 font-medium mb-2">CKD (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="CKD" x-model="formData.CKD">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="malignancy" class="block text-gray-700 font-medium mb-2">Malignancy (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="malignancy" x-model="formData.malignancy">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="mental_illness" class="block text-gray-700 font-medium mb-2">Mental Illness (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="mental_illness" x-model="formData.mental_illness">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-
-                    <div>
-                        <label for="albumin_missing" class="block text-gray-700 font-medium mb-2">Albumin Missing (0/1):</label>
-                        <label class="switch">
-                            <input
-                                type="checkbox"
-                                id="albumin_missing"
-                                x-model="formData.albumin_missing"
-                                x-on:change="if (formData.albumin_missing) { formData.albumin = null }"
-                            >
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                    
-
-                    <div>
-                        <label for="albumin" class="block text-gray-700 font-medium mb-2">Albumin Level:</label>
-                        <input
-                            type="number"
-                            id="albumin"
-                            x-model.number="formData.albumin"
-                            min="0"
-                            step="0.1"
-                            :disabled="formData.albumin_missing"
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        >
-                    </div>
-                    
-
-                    
-                    <div>
-                        <label for="creatinine_missing" class="block text-gray-700 font-medium mb-2">Creatinine Missing (0/1):</label>
-                        <label class="switch">
-                            <input
-                                type="checkbox"
-                                id="creatinine_missing"
-                                x-model="formData.creatinine_missing"
-                                x-on:change="if (formData.creatinine_missing) { formData.creatinine = null }"
-                            >
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                    
-
-                    <div>
-                        <label for="creatinine" class="block text-gray-700 font-medium mb-2">Creatinine Level:</label>
-                        <input
-                            type="number"
-                            id="creatinine"
-                            x-model.number="formData.creatinine"
-                            min="0"
-                            step="0.1"
-                            :disabled="formData.creatinine_missing"
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        >
-                    </div>
-                    
-
-                    <div>
-                        <label for="Hb_A1C_missing" class="block text-gray-700 font-medium mb-2">Hb A1C Missing (0/1):</label>
-                        <label class="switch">
-                            <input
-                                type="checkbox"
-                                id="Hb_A1C_missing"
-                                x-model="formData.Hb_A1C_missing"
-                                x-on:change="if (formData.Hb_A1C_missing) { formData.Hb_A1C = null }"
-                            >
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                    
-
-                    <div>
-                        <label for="Hb_A1C" class="block text-gray-700 font-medium mb-2">Hb A1C Level:</label>
-                        <input
-                            type="number"
-                            id="Hb_A1C"
-                            x-model.number="formData.Hb_A1C"
-                            min="0"
-                            step="0.1"
-                            :disabled="formData.Hb_A1C_missing"
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        >
-                    </div>
-                    
-
-            
-            
-                    <div>
-                        <label for="predict_at" class="block text-gray-700 font-medium mb-2">Prediction Time Horizon (Days):</label>
-                        <input type="number" id="predict_at" x-model.number="formData.predict_at" min="365" required 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-                </div>
-
-                <div class="flex space-x-6 mt-8">
-                    <button type="submit" class="w-1/2 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
-                        Submit
-                    </button>
-                    <button type="reset" @click="resetForm" class="w-1/2 bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 focus:ring-2 focus:ring-red-400">
-                        Reset
-                    </button>
-                </div>
-
-                <div x-show="isLoading" class="loading-overlay">
-                    <div class="spinner-container">
-                        <div class="spinner"></div>
-                        <div class="elapsed-time" x-text="elapsedTime + 's'"></div>
-                    </div>
-                    <p>Processing your request, please wait...</p>
-                </div>
-                
-                
-            </form>
+    <main class="flex-grow max-w-6xl mx-auto px-4 py-4" x-data="{ selectedTab: 'single' }">
+        <!-- Tab Navigation -->
+        <div class="flex space-x-4 mb-4">
+            <button @click="selectedTab = 'single'"
+                :class="selectedTab === 'single' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                class="py-2 px-4 rounded">
+                Single Prediction
+            </button>
+            <button @click="selectedTab = 'batch'"
+                :class="selectedTab === 'batch' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                class="py-2 px-4 rounded">
+                Batch Prediction
+            </button>
         </div>
 
-        <!-- Chart Section (Right) -->
-        <div class="w-1/2">
-            <div class="mt-8" x-show="cifSeries.length > 0 || chfSeries.length > 0">
-                <h2 class="text-2xl font-bold text-center text-blue-600 mb-4">Cumulative Charts</h2>
-                <canvas id="cifChart" class="mb-4"></canvas>
-                <canvas id="chfChart" class="mb-8"></canvas>
+        <!-- Single Prediction Content -->
+        <div x-show="selectedTab === 'single'" class="flex space-x-8" x-data="patientForm()">
+            <!-- Form Section (Left) -->
+            <div class="w-2/3 bg-white p-10 rounded-xl shadow-lg">
+                <form @submit.prevent="handleSubmit">
+                    <h2 class="text-3xl font-extrabold mb-8 text-center text-blue-600">Enter Patient Information</h2>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label for="age" class="block text-gray-700 font-medium mb-2">Age:</label>
+                            <input type="number" id="age" x-model.number="formData.age" min="0" max="120" required 
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+    
+                        <div>
+                            <label for="sex_f" class="block text-gray-700 font-medium mb-2">Sex (Female: 0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="sex_f" x-model="formData.sex_f">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+    
+                        <div>
+                            <label for="elective_adm" class="block text-gray-700 font-medium mb-2">Elective Admission (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="elective_adm" x-model="formData.elective_adm">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+    
+                        <div>
+                            <label for="homelessness" class="block text-gray-700 font-medium mb-2">Homelessness (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="homelessness" x-model="formData.homelessness">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+    
+                        <div>
+                            <label for="peripheral_AD" class="block text-gray-700 font-medium mb-2">Peripheral Arterial Disease (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="peripheral_AD" x-model="formData.peripheral_AD">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+    
+                        <div>
+                            <label for="coronary_AD" class="block text-gray-700 font-medium mb-2">Coronary Artery Disease (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="coronary_AD" x-model="formData.coronary_AD">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+    
+                        <div>
+                            <label for="stroke" class="block text-gray-700 font-medium mb-2">Stroke (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="stroke" x-model="formData.stroke">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+    
+                        <div>
+                            <label for="CHF" class="block text-gray-700 font-medium mb-2">Congestive Heart Failure (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="CHF" x-model="formData.CHF">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+    
+                        <div>
+                            <label for="hypertension" class="block text-gray-700 font-medium mb-2">Hypertension (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="hypertension" x-model="formData.hypertension">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+    
+                        <div>
+                            <label for="COPD" class="block text-gray-700 font-medium mb-2">COPD (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="COPD" x-model="formData.COPD">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+    
+                        <div>
+                            <label for="CKD" class="block text-gray-700 font-medium mb-2">CKD (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="CKD" x-model="formData.CKD">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+    
+                        <div>
+                            <label for="malignancy" class="block text-gray-700 font-medium mb-2">Malignancy (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="malignancy" x-model="formData.malignancy">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+    
+                        <div>
+                            <label for="mental_illness" class="block text-gray-700 font-medium mb-2">Mental Illness (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="mental_illness" x-model="formData.mental_illness">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+    
+                        <div>
+                            <label for="albumin_missing" class="block text-gray-700 font-medium mb-2">Albumin Missing (0/1):</label>
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    id="albumin_missing"
+                                    x-model="formData.albumin_missing"
+                                    x-on:change="if (formData.albumin_missing) { formData.albumin = null }"
+                                >
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <label for="albumin" class="block text-gray-700 font-medium mb-2">Albumin Level:</label>
+                            <input
+                                type="number"
+                                id="albumin"
+                                x-model.number="formData.albumin"
+                                min="0"
+                                step="0.1"
+                                :disabled="formData.albumin_missing"
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            >
+                        </div>
+                                         
+                        <div>
+                            <label for="creatinine_missing" class="block text-gray-700 font-medium mb-2">Creatinine Missing (0/1):</label>
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    id="creatinine_missing"
+                                    x-model="formData.creatinine_missing"
+                                    x-on:change="if (formData.creatinine_missing) { formData.creatinine = null }"
+                                >
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <label for="creatinine" class="block text-gray-700 font-medium mb-2">Creatinine Level:</label>
+                            <input
+                                type="number"
+                                id="creatinine"
+                                x-model.number="formData.creatinine"
+                                min="0"
+                                step="0.1"
+                                :disabled="formData.creatinine_missing"
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            >
+                        </div>
+                        
+                        <div>
+                            <label for="Hb_A1C_missing" class="block text-gray-700 font-medium mb-2">Hb A1C Missing (0/1):</label>
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    id="Hb_A1C_missing"
+                                    x-model="formData.Hb_A1C_missing"
+                                    x-on:change="if (formData.Hb_A1C_missing) { formData.Hb_A1C = null }"
+                                >
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    
+                        <div>
+                            <label for="Hb_A1C" class="block text-gray-700 font-medium mb-2">Hb A1C Level:</label>
+                            <input
+                                type="number"
+                                id="Hb_A1C"
+                                x-model.number="formData.Hb_A1C"
+                                min="0"
+                                step="0.1"
+                                :disabled="formData.Hb_A1C_missing"
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            >
+                        </div>
+                        
+                        <div>
+                            <label for="predict_at" class="block text-gray-700 font-medium mb-2">Prediction Time Horizon (Days):</label>
+                            <input type="number" id="predict_at" x-model.number="formData.predict_at" min="365" required 
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
 
-                <!-- Display Event Values Below the Charts as a Table -->
-                <div id="eventValues" class="text-left px-4">
-                    <h2 class="text-xl font-bold text-blue-600 mb-4">Prediction Results</h2>
+                    <div class="flex space-x-6 mt-8">
+                        <button type="submit"
+                            class="w-1/2 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+                            Submit
+                        </button>
+                        <button type="reset" @click="resetForm"
+                            class="w-1/2 bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 focus:ring-2 focus:ring-red-400">
+                            Reset
+                        </button>
+                    </div>
 
-                    <table class="table-auto border-collapse border border-gray-400 w-full text-lg">
-                        <thead>
-                            <tr class="bg-gray-100">
-                                <th class="border border-gray-300 px-4 py-2 text-left" colspan="3">
-                                    Predictions at Time Point: <span id="computedTimePoint"></span>
-                                </th>
-                            </tr>
-                            <tr class="bg-gray-100">
-                                <th class="border border-gray-300 px-4 py-2 text-left">Event</th>
-                                <th class="border border-gray-300 px-4 py-2 text-center">CIF</th>
-                                <th class="border border-gray-300 px-4 py-2 text-center">CHF</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Relapse</td>
-                                <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent1"></td>
-                                <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent1"></td>
-                            </tr>
-                            <tr>
-                                <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Death</td>
-                                <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent2"></td>
-                                <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent2"></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div x-show="isLoading" class="loading-overlay">
+                        <div class="spinner-container">
+                            <div class="spinner"></div>
+                            <div class="elapsed-time" x-text="elapsedTime + 's'"></div>
+                        </div>
+                        <p>Processing your request, please wait...</p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Chart Section (Right) -->
+            <div class="w-1/2">
+                <div class="mt-8" x-show="cifSeries.length > 0 || chfSeries.length > 0">
+                    <h2 class="text-2xl font-bold text-center text-blue-600 mb-4">Cumulative Charts</h2>
+                    <canvas id="cifChart" class="mb-4"></canvas>
+                    <canvas id="chfChart" class="mb-8"></canvas>
+
+                    <!-- Display Event Values Below the Charts as a Table -->
+                    <div id="eventValues" class="text-left px-4">
+                        <h2 class="text-xl font-bold text-blue-600 mb-4">Prediction Results</h2>
+                        <table class="table-auto border-collapse border border-gray-400 w-full text-lg">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 px-4 py-2 text-left" colspan="3">
+                                        Predictions at Time Point: <span id="computedTimePoint"></span>
+                                    </th>
+                                </tr>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 px-4 py-2 text-left">Event</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center">CIF</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center">CHF</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Relapse</td>
+                                    <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent1"></td>
+                                    <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent1"></td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Death</td>
+                                    <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent2"></td>
+                                    <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent2"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Prediction Content -->
+        <div x-show="selectedTab === 'batch'" x-data="csvUploader()">
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+                <h2 class="text-2xl font-bold mb-4">Batch Prediction via CSV Upload</h2>
+                <form @submit.prevent="handleCSVUpload">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 mb-2" for="csvFile">Select CSV File</label>
+                        <input type="file" id="csvFile" accept=".csv" @change="handleFileSelect"
+                            class="w-full p-2 border border-gray-300 rounded" required>
+                    </div>
+                    <button type="submit"
+                        class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+                        Upload and Predict
+                    </button>
+                </form>
+
+                <div x-show="results.successful_predictions.length > 0 || results.errors.length > 0" class="mt-6">
+                    <template x-if="results.successful_predictions.length > 0">
+                        <div>
+                            <h4 class="text-lg font-bold mb-2">Successful Predictions</h4>
+                            <table class="table-auto w-full text-left mb-4">
+                                <thead>
+                                    <tr>
+                                        <th class="border px-4 py-2">Row Index</th>
+                                        <th class="border px-4 py-2">Input Data</th>
+                                        <th class="border px-4 py-2">Prediction</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="prediction in results.successful_predictions"
+                                        :key="prediction.row_index">
+                                        <tr>
+                                            <td class="border px-4 py-2" x-text="prediction.row_index"></td>
+                                            <td class="border px-4 py-2">
+                                                <pre class="text-xs"
+                                                    x-text="JSON.stringify(prediction.input_data, null, 2)"></pre>
+                                            </td>
+                                            <td class="border px-4 py-2">
+                                                <pre class="text-xs"
+                                                    x-text="JSON.stringify(prediction.prediction, null, 2)"></pre>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+
+                    <template x-if="results.errors.length > 0">
+                        <div>
+                            <h4 class="text-lg font-bold mb-2 text-red-600">Errors</h4>
+                            <table class="table-auto w-full text-left">
+                                <thead>
+                                    <tr>
+                                        <th class="border px-4 py-2">Row Index</th>
+                                        <th class="border px-4 py-2">Input Data</th>
+                                        <th class="border px-4 py-2">Error</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="error in results.errors" :key="error.row_index">
+                                        <tr>
+                                            <td class="border px-4 py-2" x-text="error.row_index"></td>
+                                            <td class="border px-4 py-2">
+                                                <pre class="text-xs"
+                                                    x-text="JSON.stringify(error.input_data, null, 2)"></pre>
+                                            </td>
+                                            <td class="border px-4 py-2 text-red-600" x-text="error.error"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -412,19 +499,17 @@
                 },
                 cifSeries: [],
                 chfSeries: [],
-                cifChartInstance: null,  // Store CIF Chart instance
-                chfChartInstance: null,  // Store CHF Chart instance
-                isLoading: false,  // To control the visibility of progress bar
+                cifChartInstance: null,
+                chfChartInstance: null,
+                isLoading: false,
                 elapsedTime: 0,
                 timer: null,
                 async handleSubmit() {
-                    // Frontend Validation
                     if (this.formData.age === null || this.formData.predict_at === null) {
                         alert('Please fill in all required fields.');
                         return;
                     }
 
-                    // Convert checkboxes to 0 or 1 before sending
                     this.formData.sex_f = this.formData.sex_f ? 1 : 0;
                     this.formData.elective_adm = this.formData.elective_adm ? 1 : 0;
                     this.formData.homelessness = this.formData.homelessness ? 1 : 0;
@@ -441,10 +526,8 @@
                     this.formData.creatinine_missing = this.formData.creatinine_missing ? 1 : 0;
                     this.formData.albumin_missing = this.formData.albumin_missing ? 1 : 0;
 
-                    this.isLoading = true;  // Show progress bar
-                    this.elapsedTime = 0;  // Reset elapsed time
-
-                    // Start timer to update elapsed time every second
+                    this.isLoading = true;
+                    this.elapsedTime = 0;
                     this.timer = setInterval(() => {
                         this.elapsedTime += 1;
                     }, 1000);
@@ -464,12 +547,10 @@
                         const result = await response.json();
                         console.log('API Response:', result);
 
-                        // Store and Render Charts
                         this.cifSeries = result.cif_series;
                         this.chfSeries = result.chf_series;
                         this.renderCharts();
 
-                        // Populate the table with event values
                         document.getElementById('computedTimePoint').textContent = this.formData.predict_at;
                         document.getElementById('cifEvent1').textContent = result.cif_event1.toFixed(4);
                         document.getElementById('cifEvent2').textContent = result.cif_event2.toFixed(4);
@@ -479,8 +560,8 @@
                         console.error('Error:', error);
                         alert(`An error occurred: ${error.message}`);
                     } finally {
-                        this.isLoading = false;  // Hide progress bar
-                        clearInterval(this.timer);  // Stop the timer
+                        this.isLoading = false;
+                        clearInterval(this.timer);
                     }
                 },
                 renderCharts() {
@@ -488,7 +569,6 @@
                     this.renderChart('chfChart', 'CHF', this.chfSeries, 'chfChartInstance');
                 },
                 renderChart(canvasId, label, data, instanceProperty) {
-                    // Destroy existing chart instance if it exists
                     if (this[instanceProperty]) {
                         this[instanceProperty].destroy();
                     }
@@ -503,8 +583,8 @@
                                 data,
                                 borderColor: '#3B82F6',
                                 borderWidth: 2,
-                                pointRadius: 0,       // No points on the line
-                                pointHoverRadius: 0   // No hover effect on points
+                                pointRadius: 0,
+                                pointHoverRadius: 0
                             }]
                         },
                         options: {
@@ -540,14 +620,53 @@
                     };
                     this.cifSeries = [];
                     this.chfSeries = [];
-                    // Destroy existing chart instances
                     if (this.cifChartInstance) this.cifChartInstance.destroy();
                     if (this.chfChartInstance) this.chfChartInstance.destroy();
                 }
             };
         }
+
+        function csvUploader() {
+            return {
+                file: null,
+                results: {
+                    successful_predictions: [],
+                    errors: []
+                },
+                handleFileSelect(event) {
+                    this.file = event.target.files[0];
+                },
+                async handleCSVUpload() {
+                    if (!this.file) {
+                        alert('Please select a CSV file.');
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('file', this.file);
+
+                    try {
+                        const response = await fetch('http://localhost:8000/predict_csv', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            alert(`Error: ${data.detail}`);
+                            return;
+                        }
+
+                        this.results = data;
+                    } catch (error) {
+                        console.error('Error uploading CSV file:', error);
+                        alert('An error occurred while uploading the CSV file.');
+                    }
+                }
+            };
+        }
     </script>
-    
 </body>
 
 </html>
