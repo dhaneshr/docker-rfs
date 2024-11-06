@@ -227,51 +227,97 @@
                         </label>
                     </div>
 
-                    <div>
-                        <label for="creatinine" class="block text-gray-700 font-medium mb-2">Creatinine Level:</label>
-                        <input type="number" id="creatinine" x-model.number="formData.creatinine" min="0" step="0.1" 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="Hb_A1C" class="block text-gray-700 font-medium mb-2">Hb A1C Level:</label>
-                        <input type="number" id="Hb_A1C" x-model.number="formData.Hb_A1C" min="0" step="0.1" 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="albumin" class="block text-gray-700 font-medium mb-2">Albumin Level:</label>
-                        <input type="number" id="albumin" x-model.number="formData.albumin" min="0" step="0.1" 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="Hb_A1C_missing" class="block text-gray-700 font-medium mb-2">Hb A1C Missing (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="Hb_A1C_missing" x-model="formData.Hb_A1C_missing">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label for="creatinine_missing" class="block text-gray-700 font-medium mb-2">Creatinine Missing (0/1):</label>
-                        <label class="switch">
-                            <input type="checkbox" id="creatinine_missing" x-model="formData.creatinine_missing">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
 
                     <div>
                         <label for="albumin_missing" class="block text-gray-700 font-medium mb-2">Albumin Missing (0/1):</label>
                         <label class="switch">
-                            <input type="checkbox" id="albumin_missing" x-model="formData.albumin_missing">
+                            <input
+                                type="checkbox"
+                                id="albumin_missing"
+                                x-model="formData.albumin_missing"
+                                x-on:change="if (formData.albumin_missing) { formData.albumin = null }"
+                            >
                             <span class="slider round"></span>
                         </label>
                     </div>
+                    
 
                     <div>
+                        <label for="albumin" class="block text-gray-700 font-medium mb-2">Albumin Level:</label>
+                        <input
+                            type="number"
+                            id="albumin"
+                            x-model.number="formData.albumin"
+                            min="0"
+                            step="0.1"
+                            :disabled="formData.albumin_missing"
+                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                    </div>
+                    
+
+                    
+                    <div>
+                        <label for="creatinine_missing" class="block text-gray-700 font-medium mb-2">Creatinine Missing (0/1):</label>
+                        <label class="switch">
+                            <input
+                                type="checkbox"
+                                id="creatinine_missing"
+                                x-model="formData.creatinine_missing"
+                                x-on:change="if (formData.creatinine_missing) { formData.creatinine = null }"
+                            >
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    
+
+                    <div>
+                        <label for="creatinine" class="block text-gray-700 font-medium mb-2">Creatinine Level:</label>
+                        <input
+                            type="number"
+                            id="creatinine"
+                            x-model.number="formData.creatinine"
+                            min="0"
+                            step="0.1"
+                            :disabled="formData.creatinine_missing"
+                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                    </div>
+                    
+
+                    <div>
+                        <label for="Hb_A1C_missing" class="block text-gray-700 font-medium mb-2">Hb A1C Missing (0/1):</label>
+                        <label class="switch">
+                            <input
+                                type="checkbox"
+                                id="Hb_A1C_missing"
+                                x-model="formData.Hb_A1C_missing"
+                                x-on:change="if (formData.Hb_A1C_missing) { formData.Hb_A1C = null }"
+                            >
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    
+
+                    <div>
+                        <label for="Hb_A1C" class="block text-gray-700 font-medium mb-2">Hb A1C Level:</label>
+                        <input
+                            type="number"
+                            id="Hb_A1C"
+                            x-model.number="formData.Hb_A1C"
+                            min="0"
+                            step="0.1"
+                            :disabled="formData.Hb_A1C_missing"
+                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                    </div>
+                    
+
+            
+            
+                    <div>
                         <label for="predict_at" class="block text-gray-700 font-medium mb-2">Prediction Time Horizon (Days):</label>
-                        <input type="number" id="predict_at" x-model.number="formData.predict_at" min="0" required 
+                        <input type="number" id="predict_at" x-model.number="formData.predict_at" min="365" required 
                             class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
@@ -359,9 +405,9 @@
                     creatinine: null,
                     Hb_A1C: null,
                     albumin: null,
-                    Hb_A1C_missing: 0,
-                    creatinine_missing: 0,
-                    albumin_missing: 0,
+                    Hb_A1C_missing: false,
+                    creatinine_missing: false,
+                    albumin_missing: false,
                     predict_at: null
                 },
                 cifSeries: [],
