@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+    <!-- Meta tags and external resources -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Limb Amputation Risk Predictor</title>
@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Existing CSS styles */
         .switch {
             position: relative;
             display: inline-block;
@@ -112,16 +113,32 @@
                 transform: rotate(360deg);
             }
         }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background-color: #4caf50;
+            width: 0%;
+            transition: width 0.4s;
+        }
     </style>
 </head>
-
 <body class="bg-gray-50 flex flex-col min-h-screen">
+    <!-- Header -->
     <header class="bg-cover bg-center text-blue py-8" style="background-image: url('/resources/banner.png');">
         <div class="max-w-2xl mx-auto text-center">
-            <h1 class="text-4xl font-bold">Limb Amputation Risk Predictor</h1>
+            <!-- Optional header content -->
         </div>
     </header>
 
+    <!-- Main Content -->
     <main class="flex-grow max-w-6xl mx-auto px-4 py-4" x-data="{ selectedTab: 'single' }">
         <!-- Tab Navigation -->
         <div class="flex space-x-4 mb-4">
@@ -140,16 +157,20 @@
         <!-- Single Prediction Content -->
         <div x-show="selectedTab === 'single'" class="flex space-x-8" x-data="patientForm()">
             <!-- Form Section (Left) -->
-            <div class="w-2/3 bg-white p-10 rounded-xl shadow-lg">
+            <div class="w-1/2 bg-white p-10 rounded-xl shadow-lg">
                 <form @submit.prevent="handleSubmit">
                     <h2 class="text-3xl font-extrabold mb-8 text-center text-blue-600">Enter Patient Information</h2>
-                    <div class="grid grid-cols-2 gap-6">
+
+                    <!-- Form Grid with 5 Rows and 4 Columns -->
+                    <div class="grid grid-cols-4 gap-6 mb-6">
+
+                        <!-- First Row: Numerical Inputs -->
                         <div>
                             <label for="age" class="block text-gray-700 font-medium mb-2">Age:</label>
-                            <input type="number" id="age" x-model.number="formData.age" min="0" max="120" required 
+                            <input type="number" id="age" x-model.number="formData.age" min="0" max="120" required
                                 class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
-    
+
                         <div>
                             <label for="sex_f" class="block text-gray-700 font-medium mb-2">Sex (Female: 0/1):</label>
                             <label class="switch">
@@ -157,7 +178,7 @@
                                 <span class="slider round"></span>
                             </label>
                         </div>
-    
+
                         <div>
                             <label for="elective_adm" class="block text-gray-700 font-medium mb-2">Elective Admission (0/1):</label>
                             <label class="switch">
@@ -165,31 +186,7 @@
                                 <span class="slider round"></span>
                             </label>
                         </div>
-    
-                        <div>
-                            <label for="homelessness" class="block text-gray-700 font-medium mb-2">Homelessness (0/1):</label>
-                            <label class="switch">
-                                <input type="checkbox" id="homelessness" x-model="formData.homelessness">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-    
-                        <div>
-                            <label for="peripheral_AD" class="block text-gray-700 font-medium mb-2">Peripheral Arterial Disease (0/1):</label>
-                            <label class="switch">
-                                <input type="checkbox" id="peripheral_AD" x-model="formData.peripheral_AD">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-    
-                        <div>
-                            <label for="coronary_AD" class="block text-gray-700 font-medium mb-2">Coronary Artery Disease (0/1):</label>
-                            <label class="switch">
-                                <input type="checkbox" id="coronary_AD" x-model="formData.coronary_AD">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-    
+
                         <div>
                             <label for="stroke" class="block text-gray-700 font-medium mb-2">Stroke (0/1):</label>
                             <label class="switch">
@@ -197,7 +194,32 @@
                                 <span class="slider round"></span>
                             </label>
                         </div>
-    
+
+                        <!-- Second Row -->
+                        <div>
+                            <label for="albumin" class="block text-gray-700 font-medium mb-2">Albumin Level:</label>
+                            <input type="number" id="albumin" x-model.number="formData.albumin" min="0" step="0.1"
+                                :disabled="formData.albumin_missing"
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="albumin_missing" class="block text-gray-700 font-medium mb-2">Albumin Missing (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="albumin_missing" x-model="formData.albumin_missing"
+                                    x-on:change="if (formData.albumin_missing) { formData.albumin = 0.0 }">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="homelessness" class="block text-gray-700 font-medium mb-2">Homelessness (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="homelessness" x-model="formData.homelessness">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
                         <div>
                             <label for="CHF" class="block text-gray-700 font-medium mb-2">Congestive Heart Failure (0/1):</label>
                             <label class="switch">
@@ -205,7 +227,32 @@
                                 <span class="slider round"></span>
                             </label>
                         </div>
-    
+
+                        <!-- Third Row -->
+                        <div>
+                            <label for="creatinine" class="block text-gray-700 font-medium mb-2">Creatinine Level:</label>
+                            <input type="number" id="creatinine" x-model.number="formData.creatinine" min="0" step="0.1"
+                                :disabled="formData.creatinine_missing"
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="creatinine_missing" class="block text-gray-700 font-medium mb-2">Creatinine Missing (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="creatinine_missing" x-model="formData.creatinine_missing"
+                                    x-on:change="if (formData.creatinine_missing) { formData.creatinine = 0.0 }">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="peripheral_AD" class="block text-gray-700 font-medium mb-2">Peripheral Arterial Disease (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="peripheral_AD" x-model="formData.peripheral_AD">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
                         <div>
                             <label for="hypertension" class="block text-gray-700 font-medium mb-2">Hypertension (0/1):</label>
                             <label class="switch">
@@ -213,7 +260,32 @@
                                 <span class="slider round"></span>
                             </label>
                         </div>
-    
+
+                        <!-- Fourth Row -->
+                        <div>
+                            <label for="Hb_A1C" class="block text-gray-700 font-medium mb-2">Hb A1C Level:</label>
+                            <input type="number" id="Hb_A1C" x-model.number="formData.Hb_A1C" min="0" step="0.1"
+                                :disabled="formData.Hb_A1C_missing"
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="Hb_A1C_missing" class="block text-gray-700 font-medium mb-2">Hb A1C Missing (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="Hb_A1C_missing" x-model="formData.Hb_A1C_missing"
+                                    x-on:change="if (formData.Hb_A1C_missing) { formData.Hb_A1C = 0.0 }">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="coronary_AD" class="block text-gray-700 font-medium mb-2">Coronary Artery Disease (0/1):</label>
+                            <label class="switch">
+                                <input type="checkbox" id="coronary_AD" x-model="formData.coronary_AD">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
                         <div>
                             <label for="COPD" class="block text-gray-700 font-medium mb-2">COPD (0/1):</label>
                             <label class="switch">
@@ -221,23 +293,14 @@
                                 <span class="slider round"></span>
                             </label>
                         </div>
-    
+
+                        <!-- Fifth Row -->
                         <div>
-                            <label for="CKD" class="block text-gray-700 font-medium mb-2">CKD (0/1):</label>
-                            <label class="switch">
-                                <input type="checkbox" id="CKD" x-model="formData.CKD">
-                                <span class="slider round"></span>
-                            </label>
+                            <label for="predict_at" class="block text-gray-700 font-medium mb-2">Prediction Time Horizon (Days):</label>
+                            <input type="number" id="predict_at" x-model.number="formData.predict_at" min="365" required 
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
-    
-                        <div>
-                            <label for="malignancy" class="block text-gray-700 font-medium mb-2">Malignancy (0/1):</label>
-                            <label class="switch">
-                                <input type="checkbox" id="malignancy" x-model="formData.malignancy">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-    
+
                         <div>
                             <label for="mental_illness" class="block text-gray-700 font-medium mb-2">Mental Illness (0/1):</label>
                             <label class="switch">
@@ -245,103 +308,37 @@
                                 <span class="slider round"></span>
                             </label>
                         </div>
-    
+
                         <div>
-                            <label for="albumin_missing" class="block text-gray-700 font-medium mb-2">Albumin Missing (0/1):</label>
+                            <label for="malignancy" class="block text-gray-700 font-medium mb-2">Malignancy (0/1):</label>
                             <label class="switch">
-                                <input
-                                    type="checkbox"
-                                    id="albumin_missing"
-                                    x-model="formData.albumin_missing"
-                                    x-on:change="if (formData.albumin_missing) { formData.albumin = null }"
-                                >
+                                <input type="checkbox" id="malignancy" x-model="formData.malignancy">
                                 <span class="slider round"></span>
                             </label>
                         </div>
-                        
+
                         <div>
-                            <label for="albumin" class="block text-gray-700 font-medium mb-2">Albumin Level:</label>
-                            <input
-                                type="number"
-                                id="albumin"
-                                x-model.number="formData.albumin"
-                                min="0"
-                                step="0.1"
-                                :disabled="formData.albumin_missing"
-                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                            >
-                        </div>
-                                         
-                        <div>
-                            <label for="creatinine_missing" class="block text-gray-700 font-medium mb-2">Creatinine Missing (0/1):</label>
+                            <label for="CKD" class="block text-gray-700 font-medium mb-2">CKD (0/1):</label>
                             <label class="switch">
-                                <input
-                                    type="checkbox"
-                                    id="creatinine_missing"
-                                    x-model="formData.creatinine_missing"
-                                    x-on:change="if (formData.creatinine_missing) { formData.creatinine = null }"
-                                >
+                                <input type="checkbox" id="CKD" x-model="formData.CKD">
                                 <span class="slider round"></span>
                             </label>
-                        </div>
-                        
-                        <div>
-                            <label for="creatinine" class="block text-gray-700 font-medium mb-2">Creatinine Level:</label>
-                            <input
-                                type="number"
-                                id="creatinine"
-                                x-model.number="formData.creatinine"
-                                min="0"
-                                step="0.1"
-                                :disabled="formData.creatinine_missing"
-                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                            >
-                        </div>
-                        
-                        <div>
-                            <label for="Hb_A1C_missing" class="block text-gray-700 font-medium mb-2">Hb A1C Missing (0/1):</label>
-                            <label class="switch">
-                                <input
-                                    type="checkbox"
-                                    id="Hb_A1C_missing"
-                                    x-model="formData.Hb_A1C_missing"
-                                    x-on:change="if (formData.Hb_A1C_missing) { formData.Hb_A1C = null }"
-                                >
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-                    
-                        <div>
-                            <label for="Hb_A1C" class="block text-gray-700 font-medium mb-2">Hb A1C Level:</label>
-                            <input
-                                type="number"
-                                id="Hb_A1C"
-                                x-model.number="formData.Hb_A1C"
-                                min="0"
-                                step="0.1"
-                                :disabled="formData.Hb_A1C_missing"
-                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                            >
-                        </div>
-                        
-                        <div>
-                            <label for="predict_at" class="block text-gray-700 font-medium mb-2">Prediction Time Horizon (Days):</label>
-                            <input type="number" id="predict_at" x-model.number="formData.predict_at" min="365" required 
-                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
 
+                    <!-- Submit and Reset Buttons -->
                     <div class="flex space-x-6 mt-8">
                         <button type="submit"
-                            class="w-1/2 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+                            class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
                             Submit
                         </button>
                         <button type="reset" @click="resetForm"
-                            class="w-1/2 bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 focus:ring-2 focus:ring-red-400">
+                            class="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 focus:ring-2 focus:ring-red-400">
                             Reset
                         </button>
                     </div>
 
+                    <!-- Loading Overlay -->
                     <div x-show="isLoading" class="loading-overlay">
                         <div class="spinner-container">
                             <div class="spinner"></div>
@@ -394,25 +391,39 @@
         </div>
 
         <!-- Batch Prediction Content -->
-        <div x-show="selectedTab === 'batch'" x-data="csvUploader()">
-            <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
-                <h2 class="text-2xl font-bold mb-4">Batch Prediction via CSV Upload</h2>
+        <div x-show="selectedTab === 'batch'" class="flex space-x-8" x-data="csvUploader()">
+            <!-- Form Section (Left) -->
+            <div class="w-1/2 bg-white p-10 rounded-xl shadow-lg">
+                <h2 class="text-3xl font-extrabold mb-8 text-center text-blue-600">Batch Prediction via CSV Upload</h2>
                 <form @submit.prevent="handleCSVUpload">
                     <div class="mb-4">
-                        <label class="block text-gray-700 mb-2" for="csvFile">Select CSV File</label>
+                        <label class="block text-gray-700 font-medium mb-2" for="csvFile">Select CSV File</label>
                         <input type="file" id="csvFile" accept=".csv" @change="handleFileSelect"
-                            class="w-full p-2 border border-gray-300 rounded" required>
+                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
                     </div>
                     <button type="submit"
-                        class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+                        class="w-full bg-blue-600 text-white py-3 mt-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
                         Upload and Predict
                     </button>
                 </form>
 
-                <div x-show="results.successful_predictions.length > 0 || results.errors.length > 0" class="mt-6">
+                <!-- Loading Overlay -->
+                <div x-show="isLoadingBatch" class="loading-overlay">
+                    <div class="spinner-container">
+                        <div class="spinner"></div>
+                        <div class="elapsed-time" x-text="elapsedTime + 's'"></div>
+                    </div>
+                    <p>Processing your batch request, please wait...</p>
+                </div>
+
+                <!-- Results Section -->
+                <div class="mt-6" x-show="results.successful_predictions.length > 0 || results.errors.length > 0">
                     <template x-if="results.successful_predictions.length > 0">
                         <div>
                             <h4 class="text-lg font-bold mb-2">Successful Predictions</h4>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" :style="`width: ${(results.successful_predictions.length + results.errors.length) / totalRows * 100}%`"></div>
+                            </div>
                             <table class="table-auto w-full text-left mb-4">
                                 <thead>
                                     <tr>
@@ -422,17 +433,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <template x-for="prediction in results.successful_predictions"
-                                        :key="prediction.row_index">
+                                    <template x-for="prediction in results.successful_predictions" :key="prediction.row_index">
                                         <tr>
                                             <td class="border px-4 py-2" x-text="prediction.row_index"></td>
                                             <td class="border px-4 py-2">
-                                                <pre class="text-xs"
-                                                    x-text="JSON.stringify(prediction.input_data, null, 2)"></pre>
+                                                <pre class="text-xs" x-text="JSON.stringify(prediction.input_data, null, 2)"></pre>
                                             </td>
                                             <td class="border px-4 py-2">
-                                                <pre class="text-xs"
-                                                    x-text="JSON.stringify(prediction.prediction, null, 2)"></pre>
+                                                <pre class="text-xs" x-text="JSON.stringify(prediction.prediction, null, 2)"></pre>
                                             </td>
                                         </tr>
                                     </template>
@@ -457,8 +465,7 @@
                                         <tr>
                                             <td class="border px-4 py-2" x-text="error.row_index"></td>
                                             <td class="border px-4 py-2">
-                                                <pre class="text-xs"
-                                                    x-text="JSON.stringify(error.input_data, null, 2)"></pre>
+                                                <pre class="text-xs" x-text="JSON.stringify(error.input_data, null, 2)"></pre>
                                             </td>
                                             <td class="border px-4 py-2 text-red-600" x-text="error.error"></td>
                                         </tr>
@@ -469,9 +476,15 @@
                     </template>
                 </div>
             </div>
+
+            <!-- Placeholder Chart Section (Right) to Maintain Layout -->
+            <div class="w-1/2">
+                <!-- Optional content for the right side in batch prediction tab -->
+            </div>
         </div>
     </main>
 
+    <!-- JavaScript Functions -->
     <script>
         function patientForm() {
             return {
@@ -613,9 +626,9 @@
                         creatinine: null,
                         Hb_A1C: null,
                         albumin: null,
-                        Hb_A1C_missing: 0,
-                        creatinine_missing: 0,
-                        albumin_missing: 0,
+                        Hb_A1C_missing: false,
+                        creatinine_missing: false,
+                        albumin_missing: false,
                         predict_at: null
                     };
                     this.cifSeries = [];
@@ -633,8 +646,22 @@
                     successful_predictions: [],
                     errors: []
                 },
+                totalRows: 0,
+                processedRows: 0,
+                isLoadingBatch: false,
+                elapsedTime: 0,
+                timer: null,
                 handleFileSelect(event) {
                     this.file = event.target.files[0];
+
+                    if (this.file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const lines = e.target.result.split("\n");
+                            this.totalRows = lines.length - 1; // Assuming first line is header
+                        };
+                        reader.readAsText(this.file);
+                    }
                 },
                 async handleCSVUpload() {
                     if (!this.file) {
@@ -644,6 +671,15 @@
 
                     const formData = new FormData();
                     formData.append('file', this.file);
+
+                    this.isLoadingBatch = true;
+                    this.elapsedTime = 0;
+                    this.processedRows = 0;
+
+                    // Start timer for elapsed time
+                    this.timer = setInterval(() => {
+                        this.elapsedTime += 1;
+                    }, 1000);
 
                     try {
                         const response = await fetch('http://localhost:8000/predict_csv', {
@@ -659,14 +695,24 @@
                         }
 
                         this.results = data;
+                        this.totalRows = data.successful_predictions.length + data.errors.length;
+
+                        // Simulate row processing for progress bar demonstration
+                        for (let i = 0; i < this.totalRows; i++) {
+                            // Artificial delay for demonstration purposes
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            this.processedRows++;
+                        }
                     } catch (error) {
                         console.error('Error uploading CSV file:', error);
                         alert('An error occurred while uploading the CSV file.');
+                    } finally {
+                        this.isLoadingBatch = false;
+                        clearInterval(this.timer);
                     }
                 }
             };
         }
     </script>
 </body>
-
 </html>

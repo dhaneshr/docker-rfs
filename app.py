@@ -236,35 +236,6 @@ def make_prediction(model, new_data: pd.DataFrame) -> dict:
         logger.error("Error during R model prediction: %s", traceback.format_exc())
         raise e
 
-# def extract_prediction_details(predictions, time_point: int) -> dict:
-#     cif = np.array(predictions.rx2('cif')[0])
-#     chf = np.array(predictions.rx2('chf')[0])
-#     time_interest = np.array(predictions.rx2('time.interest'))
-
-#     # Find the closest time index to the requested time point
-#     time_index = np.argmin(np.abs(time_interest - time_point))
-
-#     # Extract individual event values
-#     cif_event1_at_time = cif[time_index, 0]
-#     cif_event2_at_time = cif[time_index, 1]
-#     chf_event1_at_time = chf[time_index, 0]
-#     chf_event2_at_time = chf[time_index, 1]
-
-#     logger.info(f"CIF event 1 at time {time_point}: {cif_event1_at_time}")
-#     logger.info(f"CIF event 2 at time {time_point}: {cif_event2_at_time}")
-#     logger.info(f"CHF event 1 at time {time_point}: {chf_event1_at_time}")
-#     logger.info(f"CHF event 2 at time {time_point}: {chf_event2_at_time}")
-
-#     # Prepare response with both the series and individual event values
-#     return {
-#         "cif_series": cif[:, 0].tolist(),
-#         "chf_series": chf[:, 0].tolist(),
-#         "cif_event1": cif_event1_at_time,
-#         "cif_event2": cif_event2_at_time,
-#         "chf_event1": chf_event1_at_time,
-#         "chf_event2": chf_event2_at_time
-#     }
-
 
 def extract_prediction_details(predictions, time_point: int) -> dict:
     cif = np.array(predictions.rx2('cif')[0])
@@ -337,52 +308,6 @@ def store_prediction(db: sqlite3.Connection, input: ModelInput, prediction_resul
         logger.error("Error inserting into the database: %s", e)
         logger.error("Failed to insert values: %s", insert_values)
         raise HTTPException(status_code=500, detail=f"Error inserting into the database: {e}")
-
-
-
-# def store_prediction(db: sqlite3.Connection, input: ModelInput, prediction_result: dict):
-#     insert_values = None  
-
-#     try:
-#         cursor = db.cursor()
-#         insert_values = (
-#             input.age,
-#             input.sex_f,
-#             input.elective_adm,
-#             input.homelessness,
-#             input.peripheral_AD,
-#             input.coronary_AD,
-#             input.stroke,
-#             input.CHF,
-#             input.hypertension,
-#             input.COPD,
-#             input.CKD,
-#             input.malignancy,
-#             input.mental_illness,
-#             input.creatinine,
-#             input.Hb_A1C,
-#             input.albumin,
-#             input.Hb_A1C_missing,
-#             input.creatinine_missing,
-#             input.albumin_missing,
-#             input.predict_at,
-#             json.dumps(prediction_result)
-#         )
-#         logger.debug("Attempting to insert values: %s", insert_values)
-#         cursor.execute('''
-#             INSERT INTO predictions (
-#                 age, sex_f, elective_adm, homelessness, 
-#                 peripheral_AD, coronary_AD, stroke, CHF, hypertension, COPD, 
-#                 CKD, malignancy, mental_illness, creatinine, Hb_A1C, albumin, 
-#                 Hb_A1C_missing, creatinine_missing, albumin_missing, predict_at, prediction
-#             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-#         ''', insert_values)
-#         db.commit()
-#         logger.info("Prediction inserted into database.")
-#     except sqlite3.Error as e:
-#         logger.error("Database insertion error: %s", e)
-#         logger.error("Failed to insert values: %s", insert_values)
-#         raise HTTPException(status_code=500, detail="Error inserting into the database")
 
 
 # FastAPI Endpoints
