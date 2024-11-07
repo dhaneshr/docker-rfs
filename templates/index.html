@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Limb Amputation Risk Predictor</title>
+    <link href="https://unpkg.com/tabulator-tables@5.4.3/dist/css/tabulator.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/tabulator-tables@5.4.3/dist/js/tabulator.min.js"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -390,98 +393,56 @@
             </div>
         </div>
 
-        <!-- Batch Prediction Content -->
-        <div x-show="selectedTab === 'batch'" class="flex space-x-8" x-data="csvUploader()">
-            <!-- Form Section (Left) -->
-            <div class="w-1/2 bg-white p-10 rounded-xl shadow-lg">
-                <h2 class="text-3xl font-extrabold mb-8 text-center text-blue-600">Batch Prediction via CSV Upload</h2>
-                <form @submit.prevent="handleCSVUpload">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-2" for="csvFile">Select CSV File</label>
-                        <input type="file" id="csvFile" accept=".csv" @change="handleFileSelect"
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                    </div>
-                    <button type="submit"
-                        class="w-full bg-blue-600 text-white py-3 mt-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
-                        Upload and Predict
-                    </button>
-                </form>
-
-                <!-- Loading Overlay -->
-                <div x-show="isLoadingBatch" class="loading-overlay">
-                    <div class="spinner-container">
-                        <div class="spinner"></div>
-                        <div class="elapsed-time" x-text="elapsedTime + 's'"></div>
-                    </div>
-                    <p>Processing your batch request, please wait...</p>
-                </div>
-
-                <!-- Results Section -->
-                <div class="mt-6" x-show="results.successful_predictions.length > 0 || results.errors.length > 0">
-                    <template x-if="results.successful_predictions.length > 0">
-                        <div>
-                            <h4 class="text-lg font-bold mb-2">Successful Predictions</h4>
-                            <div class="progress-bar-container">
-                                <div class="progress-bar" :style="`width: ${(results.successful_predictions.length + results.errors.length) / totalRows * 100}%`"></div>
-                            </div>
-                            <table class="table-auto w-full text-left mb-4">
-                                <thead>
-                                    <tr>
-                                        <th class="border px-4 py-2">Row Index</th>
-                                        <th class="border px-4 py-2">Input Data</th>
-                                        <th class="border px-4 py-2">Prediction</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <template x-for="prediction in results.successful_predictions" :key="prediction.row_index">
-                                        <tr>
-                                            <td class="border px-4 py-2" x-text="prediction.row_index"></td>
-                                            <td class="border px-4 py-2">
-                                                <pre class="text-xs" x-text="JSON.stringify(prediction.input_data, null, 2)"></pre>
-                                            </td>
-                                            <td class="border px-4 py-2">
-                                                <pre class="text-xs" x-text="JSON.stringify(prediction.prediction, null, 2)"></pre>
-                                            </td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
-                    </template>
-
-                    <template x-if="results.errors.length > 0">
-                        <div>
-                            <h4 class="text-lg font-bold mb-2 text-red-600">Errors</h4>
-                            <table class="table-auto w-full text-left">
-                                <thead>
-                                    <tr>
-                                        <th class="border px-4 py-2">Row Index</th>
-                                        <th class="border px-4 py-2">Input Data</th>
-                                        <th class="border px-4 py-2">Error</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <template x-for="error in results.errors" :key="error.row_index">
-                                        <tr>
-                                            <td class="border px-4 py-2" x-text="error.row_index"></td>
-                                            <td class="border px-4 py-2">
-                                                <pre class="text-xs" x-text="JSON.stringify(error.input_data, null, 2)"></pre>
-                                            </td>
-                                            <td class="border px-4 py-2 text-red-600" x-text="error.error"></td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
-                        </div>
-                    </template>
-                </div>
+   <!-- Batch Prediction Content -->
+<div x-show="selectedTab === 'batch'" class="flex flex-row space-x-8" x-data="csvUploader()">
+    <!-- Form Section (Left) -->
+    <div class="w-3/4 bg-white p-10 rounded-xl shadow-lg">
+        <h2 class="text-2xl font-extrabold mb-8 text-center text-blue-600">Batch Prediction via CSV Upload</h2>
+        <form @submit.prevent="handleCSVUpload">
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2" for="csvFile">Select CSV File</label>
+                <input type="file" id="csvFile" accept=".csv" @change="handleFileSelect"
+                    class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
             </div>
+            <button type="submit"
+                class="w-full bg-blue-600 text-white py-3 mt-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+                Upload and Predict
+            </button>
+        </form>
+</div>
 
-            <!-- Placeholder Chart Section (Right) to Maintain Layout -->
-            <div class="w-1/2">
-                <!-- Optional content for the right side in batch prediction tab -->
-            </div>
+<!-- Loading Overlay -->
+<div x-show="isLoadingBatch" class="loading-overlay">
+    <div class="progress-bar-container w-3/4 bg-white p-10 rounded-xl shadow-lg text-center">
+        <h2 class="text-2xl font-extrabold mb-4 text-blue-600">Processing Batch Predictions</h2>
+        <div class="progress-bar" style="width: 100%; background-color: #f3f3f3; border-radius: 8px; overflow: hidden; margin-bottom: 20px;">
+            <div id="progressBar" style="width: 0%; height: 30px; background-color: #4caf50; transition: width 0.4s;"></div>
         </div>
+        <p id="progressText" class="font-semibold mb-4">0% Completed</p>
+        <div id="elapsedTime" class="text-blue-600 font-bold">Elapsed Time: 0s</div>
+    </div>
+</div>
+
+
+                                <!-- Results Section -->
+                    <div class="mt-6" x-show="results.successful_predictions.length > 0 || results.errors.length > 0">
+                        <template x-if="results.successful_predictions.length > 0">
+                            <div>
+                                <h4 class="text-lg font-bold mb-2">Successful Predictions</h4>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" :style="`width: ${(results.successful_predictions.length + results.errors.length) / totalRows * 100}%`"></div>
+                                </div>
+                                <div id="resultsTable" style="height: 400px;"></div> <!-- Tabulator container for successful predictions -->
+                            </div>
+                        </template>
+
+                        <template x-if="results.errors.length > 0">
+                            <div class="mt-8">
+                                <h4 class="text-lg font-bold mb-2 text-red-600">Errors</h4>
+                                <div id="errorsTable" style="height: 400px;"></div> <!-- Tabulator container for errors -->
+                            </div>
+                        </template>
+                    </div>
     </main>
 
     <!-- JavaScript Functions -->
@@ -640,38 +601,43 @@
         }
 
         function csvUploader() {
-            return {
-                file: null,
-                results: {
-                    successful_predictions: [],
-                    errors: []
-                },
-                totalRows: 0,
-                processedRows: 0,
-                isLoadingBatch: false,
-                elapsedTime: 0,
-                timer: null,
-                handleFileSelect(event) {
-                    this.file = event.target.files[0];
+    return {
+        file: null,
+        results: {
+            successful_predictions: [],
+            errors: []
+        },
+        totalRows: 0,
+        processedRows: 0,
+        isLoadingBatch: false,
+        elapsedTime: 0,
+        timer: null,
+        handleFileSelect(event) {
+            this.file = event.target.files[0];
 
-                    if (this.file) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            const lines = e.target.result.split("\n");
-                            this.totalRows = lines.length - 1; // Assuming first line is header
-                        };
-                        reader.readAsText(this.file);
-                    }
-                },
-                async handleCSVUpload() {
-                    if (!this.file) {
-                        alert('Please select a CSV file.');
-                        return;
-                    }
+            if (this.file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const lines = e.target.result.split("\n");
+                    this.totalRows = lines.length - 1; // Assuming first line is header
+                };
+                reader.readAsText(this.file);
+            }
+        },
+        async handleCSVUpload() {
+            if (!this.file) {
+                alert('Please select a CSV file.');
+                return;
+            }
 
-                    const formData = new FormData();
-                    formData.append('file', this.file);
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const csvContent = e.target.result;
+                    const rows = csvContent.split("\n");
+                    const headers = rows[0].split(",");
 
+                    this.totalRows = rows.length - 1; // Subtract header row
                     this.isLoadingBatch = true;
                     this.elapsedTime = 0;
                     this.processedRows = 0;
@@ -679,40 +645,144 @@
                     // Start timer for elapsed time
                     this.timer = setInterval(() => {
                         this.elapsedTime += 1;
+                        document.getElementById('elapsedTime').textContent = `Elapsed Time: ${this.elapsedTime}s`;
                     }, 1000);
 
-                    try {
-                        const response = await fetch('http://localhost:8000/predict_csv', {
-                            method: 'POST',
-                            body: formData
-                        });
-
-                        const data = await response.json();
-
-                        if (!response.ok) {
-                            alert(`Error: ${data.detail}`);
-                            return;
+                    // Process each row individually
+                    for (let i = 1; i < rows.length; i++) {
+                        if (rows[i].trim() === "") {
+                            continue; // Skip empty rows
                         }
+                        const rowData = rows[i].split(",");
+                        const inputData = this.mapRowToInput(headers, rowData);
 
-                        this.results = data;
-                        this.totalRows = data.successful_predictions.length + data.errors.length;
-
-                        // Simulate row processing for progress bar demonstration
-                        for (let i = 0; i < this.totalRows; i++) {
-                            // Artificial delay for demonstration purposes
-                            await new Promise(resolve => setTimeout(resolve, 100));
-                            this.processedRows++;
-                        }
-                    } catch (error) {
-                        console.error('Error uploading CSV file:', error);
-                        alert('An error occurred while uploading the CSV file.');
-                    } finally {
-                        this.isLoadingBatch = false;
-                        clearInterval(this.timer);
+                        await this.processSingleRow(inputData, i - 1);
                     }
+
+                    this.$nextTick(() => {
+                        this.renderResultsTable();
+                        this.renderErrorsTable();
+                    });
+
+                } catch (error) {
+                    console.error('Error processing CSV file:', error);
+                    alert('An error occurred while processing the CSV file.');
+                } finally {
+                    this.isLoadingBatch = false;
+                    clearInterval(this.timer);
                 }
             };
+
+            reader.readAsText(this.file);
+        },
+        mapRowToInput(headers, rowData) {
+            const input = {};
+            headers.forEach((header, index) => {
+                input[header.trim()] = rowData[index].trim();
+            });
+            return input;
+        },
+        async processSingleRow(inputData, rowIndex) {
+            try {
+                const response = await fetch('http://localhost:8000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(inputData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                const predictionResult = await response.json();
+
+                // Update successful predictions list
+                this.results.successful_predictions.push({
+                    row_index: rowIndex,
+                    timestamp: new Date().toLocaleString(),
+                    ...inputData,
+                    cif_event_1: predictionResult.cif_event1,
+                    cif_event_2: predictionResult.cif_event2,
+                    chf_event_1: predictionResult.chf_event1,
+                    chf_event_2: predictionResult.chf_event2
+                });
+            } catch (error) {
+                // Update errors list
+                this.results.errors.push({
+                    row_index: rowIndex,
+                    input_data: inputData,
+                    error: error.message
+                });
+            } finally {
+                this.processedRows++;
+                this.updateProgressBar();
+            }
+        },
+        updateProgressBar() {
+            const progressPercentage = Math.floor((this.processedRows / this.totalRows) * 100);
+            document.getElementById('progressBar').style.width = `${progressPercentage}%`;
+            document.getElementById('progressText').textContent = `${progressPercentage}% Completed`;
+        },
+        renderResultsTable() {
+            if (this.results.successful_predictions.length > 0) {
+                new Tabulator("#resultsTable", {
+                    data: this.results.successful_predictions,
+                    layout: "fitColumns",
+                    columns: [
+                        { title: "Row Index", field: "row_index", width: 80 },
+                        { title: "Timestamp", field: "timestamp", width: 150 },
+                        { title: "Age", field: "age", width: 80 },
+                        { title: "Sex (Female)", field: "sex_f", width: 100 },
+                        { title: "Elective Admission", field: "elective_adm", width: 120 },
+                        { title: "Homelessness", field: "homelessness", width: 100 },
+                        { title: "Peripheral AD", field: "peripheral_AD", width: 100 },
+                        { title: "Coronary AD", field: "coronary_AD", width: 100 },
+                        { title: "Stroke", field: "stroke", width: 100 },
+                        { title: "CHF", field: "CHF", width: 100 },
+                        { title: "Hypertension", field: "hypertension", width: 100 },
+                        { title: "COPD", field: "COPD", width: 100 },
+                        { title: "CKD", field: "CKD", width: 100 },
+                        { title: "Malignancy", field: "malignancy", width: 100 },
+                        { title: "Mental Illness", field: "mental_illness", width: 100 },
+                        { title: "Creatinine", field: "creatinine", width: 100 },
+                        { title: "Hb A1C", field: "Hb_A1C", width: 100 },
+                        { title: "Albumin", field: "albumin", width: 100 },
+                        { title: "Hb A1C Missing", field: "Hb_A1C_missing", width: 120 },
+                        { title: "Creatinine Missing", field: "creatinine_missing", width: 120 },
+                        { title: "Albumin Missing", field: "albumin_missing", width: 120 },
+                        { title: "Predict At (Days)", field: "predict_at", width: 120 },
+                        { title: "CIF Event 1", field: "cif_event_1", width: 100 },
+                        { title: "CIF Event 2", field: "cif_event_2", width: 100 },
+                        { title: "CHF Event 1", field: "chf_event_1", width: 100 },
+                        { title: "CHF Event 2", field: "chf_event_2", width: 100 },
+                    ],
+                    height: "400px",
+                    resizableColumns: true,
+                });
+            }
+        },
+        renderErrorsTable() {
+            if (this.results.errors.length > 0) {
+                new Tabulator("#errorsTable", {
+                    data: this.results.errors,
+                    layout: "fitColumns",
+                    columns: [
+                        { title: "Row Index", field: "row_index", width: 100 },
+                        { title: "Input Data", field: "input_data", formatter: "textarea", widthGrow: 3 },
+                        { title: "Error", field: "error", formatter: "textarea", widthGrow: 2, cssClass: "text-red-600" },
+                    ],
+                    height: "400px",
+                    resizableColumns: true,
+                });
+            }
         }
+    };
+}
+
+
+
+
+
     </script>
 </body>
 </html>
