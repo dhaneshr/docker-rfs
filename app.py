@@ -23,6 +23,8 @@ from io import StringIO, BytesIO
 
 DATABASE_PATH = '/app/local_data/predictions.db'
 
+# Global variable to hold the R model in memory
+global_model = None
 
 
 # Activate automatic conversion of pandas DataFrames to R DataFrames
@@ -39,11 +41,14 @@ def load_r_libraries():
     robjects.r('library(scales)')
     robjects.r('library(survival)')
 
+
 def load_r_model():
+    global global_model
     try:
         robjects.r('load("dummy_model_clean2.RData")')
         if 'model' in robjects.globalenv:
-            logger.info("R model loaded successfully.")
+            global_model = robjects.globalenv['model']
+            logger.info("R model loaded successfully into global environment.")
         else:
             logger.error("R model object 'model' not found in global environment.")
             raise ValueError("R model object not found.")
@@ -71,6 +76,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
 
 
 def get_db():
@@ -219,13 +225,16 @@ def prepare_input_data(input: ModelInput) -> pd.DataFrame:
     logger.debug(f"DataFrame created:\n{df}")
     return df
 
-def make_prediction(model, new_data: pd.DataFrame) -> dict:
+def make_prediction(new_data: pd.DataFrame) -> dict:
+    global global_model
+    if global_model is None:
+        raise RuntimeError("R model is not loaded.")
     logger.debug("Starting prediction with R model.")
     try:
         r_env = Environment()
         r_new_data = pandas2ri.py2rpy(new_data)
         r_env['r_new_data'] = r_new_data
-        r_env['model'] = model
+        r_env['model'] = global_model
 
         # Make predictions
         predict_func = robjects.r('predict')
@@ -262,7 +271,8 @@ def extract_prediction_details(predictions, time_point: int) -> dict:
         "cif_event1": cif_event1_at_time,
         "cif_event2": cif_event2_at_time,
         "chf_event1": chf_event1_at_time,
-        "chf_event2": chf_event2_at_time
+        "chf_event2": chf_event2_at_time,
+        "time_interest": time_interest.tolist()
     }
     logger.debug(f"Extracted prediction details: {prediction_result}")
     return prediction_result
@@ -319,11 +329,12 @@ def read_root(request: Request):
 async def favicon():
     return Response(status_code=204)
 
+# Prediction endpoint using the loaded model in memory
 @app.post("/predict")
 def predict(input: ModelInput, db: sqlite3.Connection = Depends(get_db)):
     try:
         new_data = prepare_input_data(input)
-        predictions = make_prediction(robjects.globalenv['model'], new_data)
+        predictions = make_prediction(new_data)
         prediction_result = extract_prediction_details(predictions, input.predict_at)
 
         store_prediction(db, input, prediction_result)

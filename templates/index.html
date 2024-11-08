@@ -447,158 +447,210 @@
 
     <!-- JavaScript Functions -->
     <script>
-        function patientForm() {
-            return {
-                formData: {
-                    age: null,
-                    sex_f: 0,
-                    elective_adm: 0,
-                    homelessness: 0,
-                    peripheral_AD: 0,
-                    coronary_AD: 0,
-                    stroke: 0,
-                    CHF: 0,
-                    hypertension: 0,
-                    COPD: 0,
-                    CKD: 0,
-                    malignancy: 0,
-                    mental_illness: 0,
-                    creatinine: null,
-                    Hb_A1C: null,
-                    albumin: null,
-                    Hb_A1C_missing: false,
-                    creatinine_missing: false,
-                    albumin_missing: false,
-                    predict_at: null
-                },
-                cifSeries: [],
-                chfSeries: [],
-                cifChartInstance: null,
-                chfChartInstance: null,
-                isLoading: false,
-                elapsedTime: 0,
-                timer: null,
-                async handleSubmit() {
-                    if (this.formData.age === null || this.formData.predict_at === null) {
-                        alert('Please fill in all required fields.');
-                        return;
-                    }
+function patientForm() {
+    return {
+        formData: {
+            age: null,
+            sex_f: 0,
+            elective_adm: 0,
+            homelessness: 0,
+            peripheral_AD: 0,
+            coronary_AD: 0,
+            stroke: 0,
+            CHF: 0,
+            hypertension: 0,
+            COPD: 0,
+            CKD: 0,
+            malignancy: 0,
+            mental_illness: 0,
+            creatinine: null,
+            Hb_A1C: null,
+            albumin: null,
+            Hb_A1C_missing: false,
+            creatinine_missing: false,
+            albumin_missing: false,
+            predict_at: null
+        },
+        cifSeries: [],          // CIF values for both events
+        chfSeries: [],          // CHF values for both events
+        timePoints: [],         // Time points from API
+        cifChartInstance: null,
+        chfChartInstance: null,
+        isLoading: false,
+        elapsedTime: 0,
+        timer: null,
+        async handleSubmit() {
+            if (this.formData.age === null || this.formData.predict_at === null) {
+                alert('Please fill in all required fields.');
+                return;
+            }
 
-                    this.formData.sex_f = this.formData.sex_f ? 1 : 0;
-                    this.formData.elective_adm = this.formData.elective_adm ? 1 : 0;
-                    this.formData.homelessness = this.formData.homelessness ? 1 : 0;
-                    this.formData.peripheral_AD = this.formData.peripheral_AD ? 1 : 0;
-                    this.formData.coronary_AD = this.formData.coronary_AD ? 1 : 0;
-                    this.formData.stroke = this.formData.stroke ? 1 : 0;
-                    this.formData.CHF = this.formData.CHF ? 1 : 0;
-                    this.formData.hypertension = this.formData.hypertension ? 1 : 0;
-                    this.formData.COPD = this.formData.COPD ? 1 : 0;
-                    this.formData.CKD = this.formData.CKD ? 1 : 0;
-                    this.formData.malignancy = this.formData.malignancy ? 1 : 0;
-                    this.formData.mental_illness = this.formData.mental_illness ? 1 : 0;
-                    this.formData.Hb_A1C_missing = this.formData.Hb_A1C_missing ? 1 : 0;
-                    this.formData.creatinine_missing = this.formData.creatinine_missing ? 1 : 0;
-                    this.formData.albumin_missing = this.formData.albumin_missing ? 1 : 0;
+            // Convert boolean form fields to 0 or 1
+            this.formData.sex_f = this.formData.sex_f ? 1 : 0;
+            this.formData.elective_adm = this.formData.elective_adm ? 1 : 0;
+            this.formData.homelessness = this.formData.homelessness ? 1 : 0;
+            this.formData.peripheral_AD = this.formData.peripheral_AD ? 1 : 0;
+            this.formData.coronary_AD = this.formData.coronary_AD ? 1 : 0;
+            this.formData.stroke = this.formData.stroke ? 1 : 0;
+            this.formData.CHF = this.formData.CHF ? 1 : 0;
+            this.formData.hypertension = this.formData.hypertension ? 1 : 0;
+            this.formData.COPD = this.formData.COPD ? 1 : 0;
+            this.formData.CKD = this.formData.CKD ? 1 : 0;
+            this.formData.malignancy = this.formData.malignancy ? 1 : 0;
+            this.formData.mental_illness = this.formData.mental_illness ? 1 : 0;
+            this.formData.Hb_A1C_missing = this.formData.Hb_A1C_missing ? 1 : 0;
+            this.formData.creatinine_missing = this.formData.creatinine_missing ? 1 : 0;
+            this.formData.albumin_missing = this.formData.albumin_missing ? 1 : 0;
 
-                    this.isLoading = true;
-                    this.elapsedTime = 0;
-                    this.timer = setInterval(() => {
-                        this.elapsedTime += 1;
-                    }, 1000);
+            this.isLoading = true;
+            this.elapsedTime = 0;
+            this.timer = setInterval(() => {
+                this.elapsedTime += 1;
+            }, 1000);
 
-                    try {
-                        const response = await fetch('http://localhost:8000/predict', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(this.formData)
-                        });
+            try {
+                const response = await fetch('http://localhost:8000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.formData)
+                });
 
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.detail || 'Prediction failed');
-                        }
-
-                        const result = await response.json();
-                        console.log('API Response:', result);
-
-                        this.cifSeries = result.cif_series;
-                        this.chfSeries = result.chf_series;
-                        this.renderCharts();
-
-                        document.getElementById('computedTimePoint').textContent = this.formData.predict_at;
-                        document.getElementById('cifEvent1').textContent = result.cif_event1.toFixed(4);
-                        document.getElementById('cifEvent2').textContent = result.cif_event2.toFixed(4);
-                        document.getElementById('chfEvent1').textContent = result.chf_event1.toFixed(4);
-                        document.getElementById('chfEvent2').textContent = result.chf_event2.toFixed(4);
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert(`An error occurred: ${error.message}`);
-                    } finally {
-                        this.isLoading = false;
-                        clearInterval(this.timer);
-                    }
-                },
-                renderCharts() {
-                    this.renderChart('cifChart', 'CIF', this.cifSeries, 'cifChartInstance');
-                    this.renderChart('chfChart', 'CHF', this.chfSeries, 'chfChartInstance');
-                },
-                renderChart(canvasId, label, data, instanceProperty) {
-                    if (this[instanceProperty]) {
-                        this[instanceProperty].destroy();
-                    }
-
-                    const ctx = document.getElementById(canvasId).getContext('2d');
-                    this[instanceProperty] = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: data.map((_, i) => `T${i + 1}`),
-                            datasets: [{
-                                label,
-                                data,
-                                borderColor: '#3B82F6',
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                pointHoverRadius: 0
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            scales: {
-                                y: { beginAtZero: true }
-                            }
-                        }
-                    });
-                },
-                resetForm() {
-                    this.formData = {
-                        age: null,
-                        sex_f: 0,
-                        elective_adm: 0,
-                        homelessness: 0,
-                        peripheral_AD: 0,
-                        coronary_AD: 0,
-                        stroke: 0,
-                        CHF: 0,
-                        hypertension: 0,
-                        COPD: 0,
-                        CKD: 0,
-                        malignancy: 0,
-                        mental_illness: 0,
-                        creatinine: null,
-                        Hb_A1C: null,
-                        albumin: null,
-                        Hb_A1C_missing: false,
-                        creatinine_missing: false,
-                        albumin_missing: false,
-                        predict_at: null
-                    };
-                    this.cifSeries = [];
-                    this.chfSeries = [];
-                    if (this.cifChartInstance) this.cifChartInstance.destroy();
-                    if (this.chfChartInstance) this.chfChartInstance.destroy();
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Prediction failed');
                 }
-            };
+
+                const result = await response.json();
+                console.log('API Response:', result);
+
+                // Store API response
+                this.cifSeries = result.cif_series;   // CIF values for both events over time
+                this.chfSeries = result.chf_series;   // CHF values for both events over time
+                this.timePoints = result.time_interest; // Time points (ensure it's correctly received)
+
+                // Debugging Logs to verify data
+                console.log('Time Points:', this.timePoints);
+                console.log('CIF Series Event 1:', this.cifSeries[0]);
+                console.log('CIF Series Event 2:', this.cifSeries[1]);
+                console.log('CHF Series Event 1:', this.chfSeries[0]);
+                console.log('CHF Series Event 2:', this.chfSeries[1]);
+
+                // Update HTML with CIF and CHF at the specified prediction time point
+                document.getElementById('computedTimePoint').textContent = this.formData.predict_at;
+                document.getElementById('cifEvent1').textContent = result.cif_event1.toFixed(4);
+                document.getElementById('cifEvent2').textContent = result.cif_event2.toFixed(4);
+                document.getElementById('chfEvent1').textContent = result.chf_event1.toFixed(4);
+                document.getElementById('chfEvent2').textContent = result.chf_event2.toFixed(4);
+
+                this.renderCharts();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`An error occurred: ${error.message}`);
+            } finally {
+                this.isLoading = false;
+                clearInterval(this.timer);
+            }
+        },
+        renderCharts() {
+    // Format timePoints to display properly on the x-axis as integers
+    const formattedTimePoints = this.timePoints.map(timePoint => Math.round(timePoint));
+
+    console.log("Formatted Time Points (as integers):", formattedTimePoints);
+
+    this.renderChart('cifChart', 'Cumulative Incidence Function (CIF)', this.cifSeries, 'cifChartInstance', formattedTimePoints);
+    this.renderChart('chfChart', 'Cumulative Hazard Function (CHF)', this.chfSeries, 'chfChartInstance', formattedTimePoints);
+},
+
+renderChart(canvasId, label, data, instanceProperty, formattedTimePoints) {
+    if (this[instanceProperty]) {
+        this[instanceProperty].destroy();
+    }
+
+    const ctx = document.getElementById(canvasId).getContext('2d');
+
+    if (!Array.isArray(data) || !Array.isArray(formattedTimePoints) || formattedTimePoints.length === 0) {
+        console.error('Data or time points are missing or not in the correct format for chart:', label);
+        return;
+    }
+
+    // Render the chart with the correct dataset and formatted labels
+    this[instanceProperty] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: formattedTimePoints,  // Use formatted time points for the x-axis labels
+            datasets: [
+                {
+                    label: label,
+                    data: data,  // Directly use the data array for the respective series
+                    borderColor: label === 'Cumulative Incidence Function (CIF)' ? '#3B82F6' : '#EF4444',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time (days)'
+                    },
+                    ticks: {
+                        callback: function(value, index, values) {
+                            return values[index];  // Use the formatted values directly for labeling
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: label
+                    }
+                }
+            }
         }
+    });
+},
+
+
+
+        resetForm() {
+            this.formData = {
+                age: null,
+                sex_f: 0,
+                elective_adm: 0,
+                homelessness: 0,
+                peripheral_AD: 0,
+                coronary_AD: 0,
+                stroke: 0,
+                CHF: 0,
+                hypertension: 0,
+                COPD: 0,
+                CKD: 0,
+                malignancy: 0,
+                mental_illness: 0,
+                creatinine: null,
+                Hb_A1C: null,
+                albumin: null,
+                Hb_A1C_missing: false,
+                creatinine_missing: false,
+                albumin_missing: false,
+                predict_at: null
+            };
+            this.cifSeries = [];
+            this.chfSeries = [];
+            this.timePoints = [];
+            if (this.cifChartInstance) this.cifChartInstance.destroy();
+            if (this.chfChartInstance) this.chfChartInstance.destroy();
+        }
+    };
+}
+
+
+
 
         function csvUploader() {
     return {
@@ -662,6 +714,7 @@
                     this.$nextTick(() => {
                         this.renderResultsTable();
                         this.renderErrorsTable();
+                        this.createDownloadButtons();
                     });
 
                 } catch (error) {
@@ -700,11 +753,8 @@
                 this.results.successful_predictions.push({
                     row_index: rowIndex,
                     timestamp: new Date().toLocaleString(),
-                    ...inputData,
-                    cif_event_1: predictionResult.cif_event1,
-                    cif_event_2: predictionResult.cif_event2,
-                    chf_event_1: predictionResult.chf_event1,
-                    chf_event_2: predictionResult.chf_event2
+                    input_data: inputData,
+                    prediction: predictionResult
                 });
             } catch (error) {
                 // Update errors list
@@ -723,6 +773,55 @@
             document.getElementById('progressBar').style.width = `${progressPercentage}%`;
             document.getElementById('progressText').textContent = `${progressPercentage}% Completed`;
         },
+        jsonTreeFormatter(cell, formatterParams) {
+            const data = cell.getValue();
+            const container = document.createElement("div");
+            container.style.maxHeight = "200px"; // Limit the height of the container
+            container.style.overflowY = "auto"; // Add a vertical scrollbar
+
+            function createTreeNode(data, parent) {
+                if (typeof data === "object" && data !== null) {
+                    const isCollapsible = Object.keys(data).length > 0;
+                    const node = document.createElement("div");
+                    node.classList.add("tree-node");
+
+                    if (isCollapsible) {
+                        const toggle = document.createElement("span");
+                        toggle.classList.add("toggle");
+                        toggle.textContent = "+";
+                        toggle.style.cursor = "pointer";
+
+                        const childrenContainer = document.createElement("div");
+                        childrenContainer.style.display = "none";
+                        childrenContainer.classList.add("children");
+
+                        toggle.addEventListener("click", () => {
+                            const expanded = childrenContainer.style.display === "block";
+                            childrenContainer.style.display = expanded ? "none" : "block";
+                            toggle.textContent = expanded ? "+" : "-";
+                        });
+
+                        node.appendChild(toggle);
+                        Object.entries(data).forEach(([key, value]) => {
+                            const child = document.createElement("div");
+                            child.classList.add("child");
+                            child.innerHTML = `<strong>${key}:</strong> ${typeof value === "object" ? "" : value}`;
+                            if (typeof value === "object") {
+                                createTreeNode(value, child);
+                            }
+                            childrenContainer.appendChild(child);
+                        });
+                        node.appendChild(childrenContainer);
+                    } else {
+                        node.innerHTML = JSON.stringify(data);
+                    }
+                    parent.appendChild(node);
+                }
+            }
+
+            createTreeNode(data, container);
+            return container;
+        },
         renderResultsTable() {
             if (this.results.successful_predictions.length > 0) {
                 new Tabulator("#resultsTable", {
@@ -731,30 +830,16 @@
                     columns: [
                         { title: "Row Index", field: "row_index", width: 80 },
                         { title: "Timestamp", field: "timestamp", width: 150 },
-                        { title: "Age", field: "age", width: 80 },
-                        { title: "Sex (Female)", field: "sex_f", width: 100 },
-                        { title: "Elective Admission", field: "elective_adm", width: 120 },
-                        { title: "Homelessness", field: "homelessness", width: 100 },
-                        { title: "Peripheral AD", field: "peripheral_AD", width: 100 },
-                        { title: "Coronary AD", field: "coronary_AD", width: 100 },
-                        { title: "Stroke", field: "stroke", width: 100 },
-                        { title: "CHF", field: "CHF", width: 100 },
-                        { title: "Hypertension", field: "hypertension", width: 100 },
-                        { title: "COPD", field: "COPD", width: 100 },
-                        { title: "CKD", field: "CKD", width: 100 },
-                        { title: "Malignancy", field: "malignancy", width: 100 },
-                        { title: "Mental Illness", field: "mental_illness", width: 100 },
-                        { title: "Creatinine", field: "creatinine", width: 100 },
-                        { title: "Hb A1C", field: "Hb_A1C", width: 100 },
-                        { title: "Albumin", field: "albumin", width: 100 },
-                        { title: "Hb A1C Missing", field: "Hb_A1C_missing", width: 120 },
-                        { title: "Creatinine Missing", field: "creatinine_missing", width: 120 },
-                        { title: "Albumin Missing", field: "albumin_missing", width: 120 },
-                        { title: "Predict At (Days)", field: "predict_at", width: 120 },
-                        { title: "CIF Event 1", field: "cif_event_1", width: 100 },
-                        { title: "CIF Event 2", field: "cif_event_2", width: 100 },
-                        { title: "CHF Event 1", field: "chf_event_1", width: 100 },
-                        { title: "CHF Event 2", field: "chf_event_2", width: 100 },
+                        { 
+                            title: "Input Data", 
+                            field: "input_data", 
+                            formatter: this.jsonTreeFormatter,
+                            widthGrow: 2
+                        },
+                        { title: "CIF Event 1", field: "prediction.cif_event1", width: 100 },
+                        { title: "CIF Event 2", field: "prediction.cif_event2", width: 100 },
+                        { title: "CHF Event 1", field: "prediction.chf_event1", width: 100 },
+                        { title: "CHF Event 2", field: "prediction.chf_event2", width: 100 },
                     ],
                     height: "400px",
                     resizableColumns: true,
@@ -768,18 +853,73 @@
                     layout: "fitColumns",
                     columns: [
                         { title: "Row Index", field: "row_index", width: 100 },
-                        { title: "Input Data", field: "input_data", formatter: "textarea", widthGrow: 3 },
+                        { 
+                            title: "Input Data", 
+                            field: "input_data", 
+                            formatter: this.jsonTreeFormatter,
+                            widthGrow: 2
+                        },
                         { title: "Error", field: "error", formatter: "textarea", widthGrow: 2, cssClass: "text-red-600" },
                     ],
                     height: "400px",
                     resizableColumns: true,
                 });
             }
+        },
+        downloadResultsJSON(filename, data) {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", filename);
+            document.body.appendChild(downloadAnchorNode); // Required for Firefox
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        },
+        createDownloadButtons() {
+            // Log to see if function is called
+            console.log("Creating download buttons...");
+
+            // Clear existing buttons
+            const resultsTableContainer = document.getElementById('resultsTableContainer');
+            const errorsTableContainer = document.getElementById('errorsTableContainer');
+
+            if (resultsTableContainer) {
+                resultsTableContainer.innerHTML = "";
+            }
+            if (errorsTableContainer) {
+                errorsTableContainer.innerHTML = "";
+            }
+
+            // Create a button for downloading successful predictions
+            if (this.results.successful_predictions.length > 0) {
+                const successfulDownloadButton = document.createElement("button");
+                successfulDownloadButton.textContent = "Download Successful Predictions JSON";
+                successfulDownloadButton.classList.add("download-button", "bg-green-500", "text-white", "px-4", "py-2", "rounded", "mt-4");
+                successfulDownloadButton.addEventListener("click", () => {
+                    this.downloadResultsJSON("successful_predictions.json", this.results.successful_predictions);
+                });
+
+                if (resultsTableContainer) {
+                    resultsTableContainer.appendChild(successfulDownloadButton);
+                }
+            }
+
+            // Create a button for downloading errors
+            if (this.results.errors.length > 0) {
+                const errorsDownloadButton = document.createElement("button");
+                errorsDownloadButton.textContent = "Download Errors JSON";
+                errorsDownloadButton.classList.add("download-button", "bg-red-500", "text-white", "px-4", "py-2", "rounded", "mt-4");
+                errorsDownloadButton.addEventListener("click", () => {
+                    this.downloadResultsJSON("errors.json", this.results.errors);
+                });
+
+                if (errorsTableContainer) {
+                    errorsTableContainer.appendChild(errorsDownloadButton);
+                }
+            }
         }
     };
 }
-
-
 
 
 
