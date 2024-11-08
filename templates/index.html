@@ -551,33 +551,43 @@ function patientForm() {
                 clearInterval(this.timer);
             }
         },
+
         renderCharts() {
-    // Format timePoints to display properly on the x-axis as integers
-    const formattedTimePoints = this.timePoints.map(timePoint => Math.round(timePoint));
+            // Format timePoints to display properly on the x-axis as integers
+            const formattedTimePoints = this.timePoints.map(timePoint => Math.round(Number(timePoint)));
 
-    console.log("Formatted Time Points (as integers):", formattedTimePoints);
+            console.log("Formatted Time Points (as integers):", formattedTimePoints);
+            formattedTimePoints.forEach((point, index) => {
+                console.log(`Index ${index}, Type: ${typeof point}, Value: ${point}`);
+            });
 
-    this.renderChart('cifChart', 'Cumulative Incidence Function (CIF)', this.cifSeries, 'cifChartInstance', formattedTimePoints);
-    this.renderChart('chfChart', 'Cumulative Hazard Function (CHF)', this.chfSeries, 'chfChartInstance', formattedTimePoints);
-},
 
-renderChart(canvasId, label, data, instanceProperty, formattedTimePoints) {
-    if (this[instanceProperty]) {
-        this[instanceProperty].destroy();
-    }
+            console.log("Formatted Time Points (as integers):", formattedTimePoints);
+            console.log("Are all numbers:", formattedTimePoints.every(val => typeof val === 'number'));
 
-    const ctx = document.getElementById(canvasId).getContext('2d');
+            this.renderChart('cifChart', 'Cumulative Incidence Function (CIF)', this.cifSeries, 'cifChartInstance', formattedTimePoints);
+            this.renderChart('chfChart', 'Cumulative Hazard Function (CHF)', this.chfSeries, 'chfChartInstance', formattedTimePoints);
+        },
 
-    if (!Array.isArray(data) || !Array.isArray(formattedTimePoints) || formattedTimePoints.length === 0) {
-        console.error('Data or time points are missing or not in the correct format for chart:', label);
-        return;
-    }
+        renderChart(canvasId, label, data, instanceProperty, formattedTimePoints) {
+            if (this[instanceProperty]) {
+                this[instanceProperty].destroy();
+            }
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+
+            if (!Array.isArray(data) || !Array.isArray(formattedTimePoints) || formattedTimePoints.length === 0) {
+                console.error('Data or time points are missing or not in the correct format for chart:', label);
+                return;
+            }
 
     // Render the chart with the correct dataset and formatted labels
     this[instanceProperty] = new Chart(ctx, {
         type: 'line',
         data: {
             labels: formattedTimePoints,  // Use formatted time points for the x-axis labels
+      
+
             datasets: [
                 {
                     label: label,
@@ -597,12 +607,7 @@ renderChart(canvasId, label, data, instanceProperty, formattedTimePoints) {
                         display: true,
                         text: 'Time (days)'
                     },
-                    ticks: {
-                        callback: function(value, index, values) {
-                            return values[index];  // Use the formatted values directly for labeling
-                        }
-                    }
-                },
+                 },
                 y: {
                     beginAtZero: true,
                     title: {
