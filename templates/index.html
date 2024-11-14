@@ -12,6 +12,22 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+
+            /* Grid layout adjustment for the row */
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem; /* Adjust the gap between columns if needed */
+        align-items: center; /* Align all items in the center of their row */
+    }
+
+/* Optional - Center the sliders specifically */
+.switch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
         /* Existing CSS styles */
         .switch {
             position: relative;
@@ -47,6 +63,32 @@
             background-color: white;
             transition: .4s;
         }
+
+                /* Style for the checkbox input when focused */
+        input[type="checkbox"]:focus + .slider {
+            box-shadow: 0 0 8px 4px rgba(59, 130, 246, 0.7); /* Blue glow effect around the slider */
+            outline: none;
+        }
+
+        /* Optional: Add a border for additional focus effect */
+        input[type="checkbox"]:focus-visible + .slider {
+            border: 2px solid #3B82F6; /* Blue border to indicate focus */
+        }
+
+
+        
+        /* Styles for focused form elements to provide visual indication */
+        input:focus, select:focus, button:focus, .switch input:focus {
+            outline: none;
+            box-shadow: 0 0 5px 2px rgba(59, 130, 246, 0.7); /* Add a blue glow around focused elements */
+            border: 2px solid #3B82F6; /* Blue border to indicate focus */
+        }
+
+        .slider:focus {
+            box-shadow: 0 0 5px 2px rgba(59, 130, 246, 0.7);
+            border-radius: 50%; /* Keeps the slider's rounded visual */
+        }
+
 
         input:checked + .slider {
             background-color: #2196F3;
@@ -85,6 +127,12 @@
             margin-bottom: 20px;
         }
 
+        /* Add margin to the container of each slider to increase spacing */
+        .switch {
+            margin-right: 20px; /* Increase the margin to adjust horizontal spacing */
+        }
+
+
         .spinner {
             position: absolute;
             top: 0;
@@ -106,6 +154,9 @@
             color: #3498db;
             font-weight: bold;
         }
+
+
+        
 
         @keyframes spin {
             0% {
@@ -164,41 +215,41 @@
                 <form @submit.prevent="handleSubmit">
                     <h2 class="text-3xl font-extrabold mb-8 text-center text-blue-600">Enter Patient Information</h2>
 
-                    <!-- Form Grid with 5 Rows and 4 Columns -->
-                    <div class="grid grid-cols-4 gap-6 mb-6">
-
-                        <!-- First Row: Numerical Inputs -->
+                                    <!-- First Row: Numerical Inputs and Switches -->
+                    <div class="grid grid-cols-4 gap-10 mb-6 items-center">
                         <div>
-                            <label for="age" class="block text-gray-700 font-medium mb-2">Age:</label>
+                            <label for="age" class="block text-gray-700 font-medium mb-2">Age</label>
                             <input type="number" id="age" x-model.number="formData.age" min="0" max="120" required
                                 class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
 
                         <div>
-                            <label for="sex_f" class="block text-gray-700 font-medium mb-2">Sex (Female: 0/1):</label>
+                            <label for="sex_f" class="block text-gray-700 font-medium mb-2">Sex - Female?</label>
                             <label class="switch">
-                                <input type="checkbox" id="sex_f" x-model="formData.sex_f">
+                                <input type="checkbox" id="sex_f" x-model="formData.sex_f" tabindex="0">
                                 <span class="slider round"></span>
                             </label>
                         </div>
 
                         <div>
-                            <label for="elective_adm" class="block text-gray-700 font-medium mb-2">Elective Admission (0/1):</label>
+                            <label for="elective_adm" class="block text-gray-700 font-medium mb-2">Elective Admission?</label>
                             <label class="switch">
-                                <input type="checkbox" id="elective_adm" x-model="formData.elective_adm">
+                                <input type="checkbox" id="elective_adm" x-model="formData.elective_adm" tabindex="0">
                                 <span class="slider round"></span>
                             </label>
                         </div>
 
                         <div>
-                            <label for="stroke" class="block text-gray-700 font-medium mb-2">Stroke (0/1):</label>
+                            <label for="stroke" class="block text-gray-700 font-medium mb-2">Stroke?</label>
                             <label class="switch">
-                                <input type="checkbox" id="stroke" x-model="formData.stroke">
+                                <input type="checkbox" id="stroke" x-model="formData.stroke" tabindex="0">
                                 <span class="slider round"></span>
                             </label>
                         </div>
+                    </div>
 
-                        <!-- Second Row -->
+                    <!-- Second Row: Albumin and Related Sliders -->
+                    <div class="grid grid-cols-4 gap-6 mb-6 items-center">
                         <div>
                             <label for="albumin" class="block text-gray-700 font-medium mb-2">Albumin Level:</label>
                             <input type="number" id="albumin" x-model.number="formData.albumin" min="0" step="0.1"
@@ -207,31 +258,33 @@
                         </div>
 
                         <div>
-                            <label for="albumin_missing" class="block text-gray-700 font-medium mb-2">Albumin Missing (0/1):</label>
+                            <label for="albumin_missing" class="block text-gray-700 font-medium mb-2">Albumin Missing?:</label>
                             <label class="switch">
-                                <input type="checkbox" id="albumin_missing" x-model="formData.albumin_missing"
+                                <input type="checkbox" id="albumin_missing" x-model="formData.albumin_missing" tabindex="0"
                                     x-on:change="if (formData.albumin_missing) { formData.albumin = 0.0 }">
                                 <span class="slider round"></span>
                             </label>
                         </div>
 
                         <div>
-                            <label for="homelessness" class="block text-gray-700 font-medium mb-2">Homelessness (0/1):</label>
+                            <label for="homelessness" class="block text-gray-700 font-medium mb-2">Homelessness?:</label>
                             <label class="switch">
-                                <input type="checkbox" id="homelessness" x-model="formData.homelessness">
+                                <input type="checkbox" id="homelessness" x-model="formData.homelessness" tabindex="0">
                                 <span class="slider round"></span>
                             </label>
                         </div>
 
                         <div>
-                            <label for="CHF" class="block text-gray-700 font-medium mb-2">Congestive Heart Failure (0/1):</label>
+                            <label for="CHF" class="block text-gray-700 font-medium mb-2">Congestive Heart Failure?:</label>
                             <label class="switch">
-                                <input type="checkbox" id="CHF" x-model="formData.CHF">
+                                <input type="checkbox" id="CHF" x-model="formData.CHF" tabindex="0">
                                 <span class="slider round"></span>
                             </label>
                         </div>
+                    </div>
 
-                        <!-- Third Row -->
+                    <!-- Third Row: Creatinine and Related Sliders -->
+                    <div class="grid grid-cols-4 gap-6 mb-6 items-center">
                         <div>
                             <label for="creatinine" class="block text-gray-700 font-medium mb-2">Creatinine Level:</label>
                             <input type="number" id="creatinine" x-model.number="formData.creatinine" min="0" step="0.1"
@@ -240,31 +293,33 @@
                         </div>
 
                         <div>
-                            <label for="creatinine_missing" class="block text-gray-700 font-medium mb-2">Creatinine Missing (0/1):</label>
+                            <label for="creatinine_missing" class="block text-gray-700 font-medium mb-2">Creatinine Missing?:</label>
                             <label class="switch">
-                                <input type="checkbox" id="creatinine_missing" x-model="formData.creatinine_missing"
+                                <input type="checkbox" id="creatinine_missing" x-model="formData.creatinine_missing" tabindex="0"
                                     x-on:change="if (formData.creatinine_missing) { formData.creatinine = 0.0 }">
                                 <span class="slider round"></span>
                             </label>
                         </div>
 
                         <div>
-                            <label for="peripheral_AD" class="block text-gray-700 font-medium mb-2">Peripheral Arterial Disease (0/1):</label>
+                            <label for="peripheral_AD" class="block text-gray-700 font-medium mb-2">Peripheral Arterial Disease?:</label>
                             <label class="switch">
-                                <input type="checkbox" id="peripheral_AD" x-model="formData.peripheral_AD">
+                                <input type="checkbox" id="peripheral_AD" x-model="formData.peripheral_AD" tabindex="0">
                                 <span class="slider round"></span>
                             </label>
                         </div>
 
                         <div>
-                            <label for="hypertension" class="block text-gray-700 font-medium mb-2">Hypertension (0/1):</label>
+                            <label for="hypertension" class="block text-gray-700 font-medium mb-2">Hypertension?:</label>
                             <label class="switch">
-                                <input type="checkbox" id="hypertension" x-model="formData.hypertension">
+                                <input type="checkbox" id="hypertension" x-model="formData.hypertension" tabindex="0">
                                 <span class="slider round"></span>
                             </label>
                         </div>
+                    </div>
 
-                        <!-- Fourth Row -->
+                    <!-- Fourth Row: Hb A1C and Related Sliders -->
+                    <div class="grid grid-cols-4 gap-6 mb-6 items-center">
                         <div>
                             <label for="Hb_A1C" class="block text-gray-700 font-medium mb-2">Hb A1C Level:</label>
                             <input type="number" id="Hb_A1C" x-model.number="formData.Hb_A1C" min="0" step="0.1"
@@ -273,61 +328,64 @@
                         </div>
 
                         <div>
-                            <label for="Hb_A1C_missing" class="block text-gray-700 font-medium mb-2">Hb A1C Missing (0/1):</label>
+                            <label for="Hb_A1C_missing" class="block text-gray-700 font-medium mb-2">Hb A1C Missing?:</label>
                             <label class="switch">
-                                <input type="checkbox" id="Hb_A1C_missing" x-model="formData.Hb_A1C_missing"
+                                <input type="checkbox" id="Hb_A1C_missing" x-model="formData.Hb_A1C_missing" tabindex="0"
                                     x-on:change="if (formData.Hb_A1C_missing) { formData.Hb_A1C = 0.0 }">
                                 <span class="slider round"></span>
                             </label>
                         </div>
 
                         <div>
-                            <label for="coronary_AD" class="block text-gray-700 font-medium mb-2">Coronary Artery Disease (0/1):</label>
+                            <label for="coronary_AD" class="block text-gray-700 font-medium mb-2">Coronary Artery Disease?:</label>
                             <label class="switch">
-                                <input type="checkbox" id="coronary_AD" x-model="formData.coronary_AD">
+                                <input type="checkbox" id="coronary_AD" x-model="formData.coronary_AD" tabindex="0">
                                 <span class="slider round"></span>
                             </label>
                         </div>
 
                         <div>
-                            <label for="COPD" class="block text-gray-700 font-medium mb-2">COPD (0/1):</label>
+                            <label for="COPD" class="block text-gray-700 font-medium mb-2">COPD?:</label>
                             <label class="switch">
-                                <input type="checkbox" id="COPD" x-model="formData.COPD">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-
-                        <!-- Fifth Row -->
-                        <div>
-                            <label for="predict_at" class="block text-gray-700 font-medium mb-2">Prediction Time Horizon (Days):</label>
-                            <input type="number" id="predict_at" x-model.number="formData.predict_at" min="365" required 
-                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-
-                        <div>
-                            <label for="mental_illness" class="block text-gray-700 font-medium mb-2">Mental Illness (0/1):</label>
-                            <label class="switch">
-                                <input type="checkbox" id="mental_illness" x-model="formData.mental_illness">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-
-                        <div>
-                            <label for="malignancy" class="block text-gray-700 font-medium mb-2">Malignancy (0/1):</label>
-                            <label class="switch">
-                                <input type="checkbox" id="malignancy" x-model="formData.malignancy">
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-
-                        <div>
-                            <label for="CKD" class="block text-gray-700 font-medium mb-2">CKD (0/1):</label>
-                            <label class="switch">
-                                <input type="checkbox" id="CKD" x-model="formData.CKD">
+                                <input type="checkbox" id="COPD" x-model="formData.COPD" tabindex="0">
                                 <span class="slider round"></span>
                             </label>
                         </div>
                     </div>
+
+                    <!-- Fifth Row: Prediction Time and Related Sliders -->
+                    <div class="grid grid-cols-4 gap-6 mb-6 items-center">
+                        <div>
+                            <label for="predict_at" class="block text-gray-700 font-medium mb-2">Prediction Time Horizon (Days):</label>
+                            <input type="number" id="predict_at" x-model.number="formData.predict_at" min="365" required
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="mental_illness" class="block text-gray-700 font-medium mb-2">Mental Illness?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="mental_illness" x-model="formData.mental_illness" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="malignancy" class="block text-gray-700 font-medium mb-2">Malignancy?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="malignancy" x-model="formData.malignancy" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="CKD" class="block text-gray-700 font-medium mb-2">CKD?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="CKD" x-model="formData.CKD" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+
 
                     <!-- Submit and Reset Buttons -->
                     <div class="flex space-x-6 mt-8">
@@ -355,42 +413,35 @@
             <!-- Chart Section (Right) -->
             <div class="w-1/2">
                 <div class="mt-8" x-show="cifSeries.length > 0 || chfSeries.length > 0">
-                    <h2 class="text-2xl font-bold text-center text-blue-600 mb-4">Cumulative Charts</h2>
+                    <h2 class="text-2xl font-bold text-center text-blue-600 mb-4">Cumulative Incidence Function</h2>
                     <canvas id="cifChart" class="mb-4"></canvas>
-                    <canvas id="chfChart" class="mb-8"></canvas>
+                    
 
                     <!-- Display Event Values Below the Charts as a Table -->
                     <div id="eventValues" class="text-left px-4">
-                        <h2 class="text-xl font-bold text-blue-600 mb-4">Prediction Results</h2>
+                        <h2 class="text-xl font-bold text-blue-600 mb-4">Foot Complication Risk</h2>
                         <table class="table-auto border-collapse border border-gray-400 w-full text-lg">
                             <thead>
                                 <tr class="bg-gray-100">
-                                    <th class="border border-gray-300 px-4 py-2 text-left" colspan="3">
-                                        Predictions at Time Point: <span id="computedTimePoint"></span>
+                                    <th class="border border-gray-300 px-4 py-2 text-left" colspan="2">
+                                        Risk at 1-year: <span id="computedTimePoint"></span>
                                     </th>
                                 </tr>
                                 <tr class="bg-gray-100">
                                     <th class="border border-gray-300 px-4 py-2 text-left">Event</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-center">CIF</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-center">CHF</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center">Risk(%)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Relapse</td>
+                                    <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Foot complication</td>
                                     <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent1"></td>
-                                    <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent1"></td>
-                                </tr>
-                                <tr>
-                                    <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Death</td>
-                                    <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent2"></td>
-                                    <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent2"></td>
                                 </tr>
                             </tbody>
                         </table>
-                    </div>
+                   </div>                    
                 </div>
-            </div>
+            </div> 
         </div>
 
    <!-- Batch Prediction Content -->
@@ -447,7 +498,7 @@
 
     <!-- JavaScript Functions -->
     <script>
-function patientForm() {
+        function patientForm() {
     return {
         formData: {
             age: null,
@@ -469,7 +520,7 @@ function patientForm() {
             Hb_A1C_missing: false,
             creatinine_missing: false,
             albumin_missing: false,
-            predict_at: null
+            predict_at: 365
         },
         cifSeries: [],          // CIF values for both events
         chfSeries: [],          // CHF values for both events
@@ -528,6 +579,8 @@ function patientForm() {
                 this.chfSeries = result.chf_series;   // CHF values for both events over time
                 this.timePoints = result.time_interest; // Time points (ensure it's correctly received)
 
+                const cifEvent1Percentage = (result.cif_event1 * 100).toFixed(2);
+
                 // Debugging Logs to verify data
                 console.log('Time Points:', this.timePoints);
                 console.log('CIF Series Event 1:', this.cifSeries[0]);
@@ -537,10 +590,12 @@ function patientForm() {
 
                 // Update HTML with CIF and CHF at the specified prediction time point
                 document.getElementById('computedTimePoint').textContent = this.formData.predict_at;
-                document.getElementById('cifEvent1').textContent = result.cif_event1.toFixed(4);
-                document.getElementById('cifEvent2').textContent = result.cif_event2.toFixed(4);
-                document.getElementById('chfEvent1').textContent = result.chf_event1.toFixed(4);
-                document.getElementById('chfEvent2').textContent = result.chf_event2.toFixed(4);
+                document.getElementById('cifEvent1').textContent = cifEvent1Percentage //result.cif_event1.toFixed(4);
+
+                
+                //document.getElementById('cifEvent2').textContent = result.cif_event2.toFixed(4);
+                //document.getElementById('chfEvent1').textContent = result.chf_event1.toFixed(4);
+                //document.getElementById('chfEvent2').textContent = result.chf_event2.toFixed(4);
 
                 this.renderCharts();
             } catch (error) {
@@ -553,20 +608,12 @@ function patientForm() {
         },
 
         renderCharts() {
-            // Format timePoints to display properly on the x-axis as integers
             const formattedTimePoints = this.timePoints.map(timePoint => Math.round(Number(timePoint)));
 
             console.log("Formatted Time Points (as integers):", formattedTimePoints);
-            formattedTimePoints.forEach((point, index) => {
-                console.log(`Index ${index}, Type: ${typeof point}, Value: ${point}`);
-            });
-
-
-            console.log("Formatted Time Points (as integers):", formattedTimePoints);
-            console.log("Are all numbers:", formattedTimePoints.every(val => typeof val === 'number'));
 
             this.renderChart('cifChart', 'Cumulative Incidence Function (CIF)', this.cifSeries, 'cifChartInstance', formattedTimePoints);
-            this.renderChart('chfChart', 'Cumulative Hazard Function (CHF)', this.chfSeries, 'chfChartInstance', formattedTimePoints);
+            //this.renderChart('chfChart', 'Cumulative Hazard Function (CHF)', this.chfSeries, 'chfChartInstance', formattedTimePoints);
         },
 
         renderChart(canvasId, label, data, instanceProperty, formattedTimePoints) {
@@ -581,46 +628,41 @@ function patientForm() {
                 return;
             }
 
-    // Render the chart with the correct dataset and formatted labels
-    this[instanceProperty] = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: formattedTimePoints,  // Use formatted time points for the x-axis labels
-      
-
-            datasets: [
-                {
-                    label: label,
-                    data: data,  // Directly use the data array for the respective series
-                    borderColor: label === 'Cumulative Incidence Function (CIF)' ? '#3B82F6' : '#EF4444',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 0
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Time (days)'
-                    },
-                 },
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: label
+            this[instanceProperty] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: formattedTimePoints,
+                    datasets: [
+                        {
+                            label: label,
+                            data: data,
+                            borderColor: label === 'Cumulative Incidence Function (CIF)' ? '#3B82F6' : '#EF4444',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointHoverRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time (days)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: label
+                            }
+                        }
                     }
                 }
-            }
-        }
-    });
-},
-
-
+            });
+        },
 
         resetForm() {
             this.formData = {
@@ -643,21 +685,26 @@ function patientForm() {
                 Hb_A1C_missing: false,
                 creatinine_missing: false,
                 albumin_missing: false,
-                predict_at: null
+                predict_at: 365
             };
             this.cifSeries = [];
             this.chfSeries = [];
             this.timePoints = [];
             if (this.cifChartInstance) this.cifChartInstance.destroy();
             if (this.chfChartInstance) this.chfChartInstance.destroy();
+
+            this.$nextTick(() => {
+                const ageInput = document.getElementById('age');
+                if (ageInput) {
+                    ageInput.focus();
+                    ageInput.select();
+                }
+            });
         }
     };
 }
 
-
-
-
-        function csvUploader() {
+function csvUploader() {
     return {
         file: null,
         results: {
@@ -676,7 +723,7 @@ function patientForm() {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const lines = e.target.result.split("\n");
-                    this.totalRows = lines.length - 1; // Assuming first line is header
+                    this.totalRows = lines.length - 1;
                 };
                 reader.readAsText(this.file);
             }
@@ -694,21 +741,19 @@ function patientForm() {
                     const rows = csvContent.split("\n");
                     const headers = rows[0].split(",");
 
-                    this.totalRows = rows.length - 1; // Subtract header row
+                    this.totalRows = rows.length - 1;
                     this.isLoadingBatch = true;
                     this.elapsedTime = 0;
                     this.processedRows = 0;
 
-                    // Start timer for elapsed time
                     this.timer = setInterval(() => {
                         this.elapsedTime += 1;
                         document.getElementById('elapsedTime').textContent = `Elapsed Time: ${this.elapsedTime}s`;
                     }, 1000);
 
-                    // Process each row individually
                     for (let i = 1; i < rows.length; i++) {
                         if (rows[i].trim() === "") {
-                            continue; // Skip empty rows
+                            continue;
                         }
                         const rowData = rows[i].split(",");
                         const inputData = this.mapRowToInput(headers, rowData);
@@ -754,7 +799,6 @@ function patientForm() {
 
                 const predictionResult = await response.json();
 
-                // Update successful predictions list
                 this.results.successful_predictions.push({
                     row_index: rowIndex,
                     timestamp: new Date().toLocaleString(),
@@ -762,7 +806,6 @@ function patientForm() {
                     prediction: predictionResult
                 });
             } catch (error) {
-                // Update errors list
                 this.results.errors.push({
                     row_index: rowIndex,
                     input_data: inputData,
@@ -781,8 +824,8 @@ function patientForm() {
         jsonTreeFormatter(cell, formatterParams) {
             const data = cell.getValue();
             const container = document.createElement("div");
-            container.style.maxHeight = "200px"; // Limit the height of the container
-            container.style.overflowY = "auto"; // Add a vertical scrollbar
+            container.style.maxHeight = "200px";
+            container.style.overflowY = "auto";
 
             function createTreeNode(data, parent) {
                 if (typeof data === "object" && data !== null) {
@@ -835,9 +878,9 @@ function patientForm() {
                     columns: [
                         { title: "Row Index", field: "row_index", width: 80 },
                         { title: "Timestamp", field: "timestamp", width: 150 },
-                        { 
-                            title: "Input Data", 
-                            field: "input_data", 
+                        {
+                            title: "Input Data",
+                            field: "input_data",
                             formatter: this.jsonTreeFormatter,
                             widthGrow: 2
                         },
@@ -858,9 +901,9 @@ function patientForm() {
                     layout: "fitColumns",
                     columns: [
                         { title: "Row Index", field: "row_index", width: 100 },
-                        { 
-                            title: "Input Data", 
-                            field: "input_data", 
+                        {
+                            title: "Input Data",
+                            field: "input_data",
                             formatter: this.jsonTreeFormatter,
                             widthGrow: 2
                         },
@@ -876,15 +919,13 @@ function patientForm() {
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
             downloadAnchorNode.setAttribute("download", filename);
-            document.body.appendChild(downloadAnchorNode); // Required for Firefox
+            document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
         },
         createDownloadButtons() {
-            // Log to see if function is called
             console.log("Creating download buttons...");
 
-            // Clear existing buttons
             const resultsTableContainer = document.getElementById('resultsTableContainer');
             const errorsTableContainer = document.getElementById('errorsTableContainer');
 
@@ -895,7 +936,6 @@ function patientForm() {
                 errorsTableContainer.innerHTML = "";
             }
 
-            // Create a button for downloading successful predictions
             if (this.results.successful_predictions.length > 0) {
                 const successfulDownloadButton = document.createElement("button");
                 successfulDownloadButton.textContent = "Download Successful Predictions JSON";
@@ -909,7 +949,6 @@ function patientForm() {
                 }
             }
 
-            // Create a button for downloading errors
             if (this.results.errors.length > 0) {
                 const errorsDownloadButton = document.createElement("button");
                 errorsDownloadButton.textContent = "Download Errors JSON";
@@ -926,7 +965,30 @@ function patientForm() {
     };
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+    const ageInput = document.getElementById('age');
+    if (ageInput) {
+        ageInput.focus();
+        ageInput.select();
+    }
 
+    const form = document.querySelector('form');
+    const focusableElements = form.querySelectorAll('input, button, select, textarea, [tabindex]:not([tabindex="-1"])');
+
+    focusableElements.forEach((element, index) => {
+        element.tabIndex = index + 1;
+    });
+
+    focusableElements.forEach((element, index) => {
+        element.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const nextIndex = (index + 1) % focusableElements.length;
+                focusableElements[nextIndex].focus();
+            }
+        });
+    });
+});
 
     </script>
 </body>
