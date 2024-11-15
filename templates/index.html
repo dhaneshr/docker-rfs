@@ -186,11 +186,19 @@
 </head>
 <body class="bg-gray-50 flex flex-col min-h-screen">
     <!-- Header -->
-    <header class="bg-cover bg-center text-blue py-8" style="background-image: url('/resources/banner.png');">
-        <div class="max-w-2xl mx-auto text-center">
-            <!-- Optional header content -->
-        </div>
+    <header class="text-blue py-8" 
+            style="
+                background-image: url('/resources/banner.png'); 
+                background-size: contain; 
+                background-position: center; 
+                background-repeat: no-repeat; 
+                height: 200px; /* Set a fixed height */
+                width: 100%; /* Full width */
+                max-width: 1200px;  /* Limit the width */
+                margin: 0 auto; /* Center the header */
+            ">
     </header>
+
 
     <!-- Main Content -->
     <main class="flex-grow max-w-6xl mx-auto px-4 py-4" x-data="{ selectedTab: 'single' }">
@@ -424,7 +432,7 @@
                             <thead>
                                 <tr class="bg-gray-100">
                                     <th class="border border-gray-300 px-4 py-2 text-left" colspan="2">
-                                        Risk at 1-year: <span id="computedTimePoint"></span>
+                                        Risk at: <span id="computedTimePoint">days</span>
                                     </th>
                                 </tr>
                                 <tr class="bg-gray-100">
