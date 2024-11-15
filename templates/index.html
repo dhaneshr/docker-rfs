@@ -1,284 +1,995 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
+    <!-- Meta tags and external resources -->
     <meta charset="UTF-8">
-    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limb Amputation Risk Predictor</title>
+    <link href="https://unpkg.com/tabulator-tables@5.4.3/dist/css/tabulator.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/tabulator-tables@5.4.3/dist/js/tabulator.min.js"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+
+            /* Grid layout adjustment for the row */
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem; /* Adjust the gap between columns if needed */
+        align-items: center; /* Align all items in the center of their row */
+    }
+
+/* Optional - Center the sliders specifically */
+.switch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+        /* Existing CSS styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+
+                /* Style for the checkbox input when focused */
+        input[type="checkbox"]:focus + .slider {
+            box-shadow: 0 0 8px 4px rgba(59, 130, 246, 0.7); /* Blue glow effect around the slider */
+            outline: none;
+        }
+
+        /* Optional: Add a border for additional focus effect */
+        input[type="checkbox"]:focus-visible + .slider {
+            border: 2px solid #3B82F6; /* Blue border to indicate focus */
+        }
+
+
+        
+        /* Styles for focused form elements to provide visual indication */
+        input:focus, select:focus, button:focus, .switch input:focus {
+            outline: none;
+            box-shadow: 0 0 5px 2px rgba(59, 130, 246, 0.7); /* Add a blue glow around focused elements */
+            border: 2px solid #3B82F6; /* Blue border to indicate focus */
+        }
+
+        .slider:focus {
+            box-shadow: 0 0 5px 2px rgba(59, 130, 246, 0.7);
+            border-radius: 50%; /* Keeps the slider's rounded visual */
+        }
+
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+            border-radius: 50%;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+        }
+
+        /* Add margin to the container of each slider to increase spacing */
+        .switch {
+            margin-right: 20px; /* Increase the margin to adjust horizontal spacing */
+        }
+
+
+        .spinner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 12px solid #f3f3f3;
+            border-top: 12px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .elapsed-time {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+
+        
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background-color: #4caf50;
+            width: 0%;
+            transition: width 0.4s;
+        }
+    </style>
 </head>
-
 <body class="bg-gray-50 flex flex-col min-h-screen">
-    <header class="bg-cover bg-center text-white py-8" style="background-image: url('/resources/banner.png');">
+    <!-- Header -->
+    <header class="bg-cover bg-center text-blue py-8" style="background-image: url('/resources/banner.png');">
         <div class="max-w-2xl mx-auto text-center">
-
+            <!-- Optional header content -->
         </div>
     </header>
 
-
-    <main class="flex-grow max-w-6xl mx-auto px-4 py-4 flex space-x-8" x-data="patientForm()">
-       <!-- Form Section (Left) -->
-        <div class="w-2/3 bg-white p-10 rounded-xl shadow-lg">
-            <form @submit.prevent="handleSubmit">
-                <h2 class="text-3xl font-extrabold mb-8 text-center text-blue-600">Enter Patient Information</h2>
-
-                <div class="grid grid-cols-2 gap-6">
-                    <div>
-                        <label for="patientId" class="block text-gray-700 font-medium mb-2">Patient ID:</label>
-                        <input type="text" id="patientId" x-model="formData.patientId" required 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="hospitalId" class="block text-gray-700 font-medium mb-2">Hospital ID:</label>
-                        <input type="text" id="hospitalId" x-model="formData.hospitalId" required 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="age" class="block text-gray-700 font-medium mb-2">Age:</label>
-                        <input type="number" id="age" x-model.number="formData.age" min="0" max="120" required 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="hgb" class="block text-gray-700 font-medium mb-2">Hemoglobin Level:</label>
-                        <input type="number" id="hgb" x-model.number="formData.hgb" min="0" step="0.1" required 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="clinstg" class="block text-gray-700 font-medium mb-2">Clinical Stage:</label>
-                        <input type="number" id="clinstg" x-model.number="formData.clinstg" min="1" required 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="predict_at" class="block text-gray-700 font-medium mb-2">Prediction Time Horizon (Days):</label>
-                        <input type="number" id="predict_at" x-model.number="formData.predict_at" min="0" required 
-                            class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-
-                    <div>
-                        <label for="ch" class="block text-gray-700 font-medium mb-2">CH (Y/N):</label>
-                        <select id="ch" x-model="formData.ch" required 
-                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="Y">Yes</option>
-                            <option value="N">No</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="rt" class="block text-gray-700 font-medium mb-2">RT (Y/N):</label>
-                        <select id="rt" x-model="formData.rt" required 
-                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                            <option value="Y">Yes</option>
-                            <option value="N">No</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="flex space-x-6 mt-8">
-                    <button type="submit" class="w-1/2 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
-                        Submit
-                    </button>
-                    <button type="reset" @click="resetForm" class="w-1/2 bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 focus:ring-2 focus:ring-red-400">
-                        Reset
-                    </button>
-                </div>
-            </form>
+    <!-- Main Content -->
+    <main class="flex-grow max-w-6xl mx-auto px-4 py-4" x-data="{ selectedTab: 'single' }">
+        <!-- Tab Navigation -->
+        <div class="flex space-x-4 mb-4">
+            <button @click="selectedTab = 'single'"
+                :class="selectedTab === 'single' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                class="py-2 px-4 rounded">
+                Single Prediction
+            </button>
+            <button @click="selectedTab = 'batch'"
+                :class="selectedTab === 'batch' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'"
+                class="py-2 px-4 rounded">
+                Batch Prediction
+            </button>
         </div>
 
-    
-        <!-- Chart Section (Right) -->
-        <div class="w-1/2">
-            <div class="mt-8" x-show="cifSeries.length > 0 || chfSeries.length > 0">
-                <h2 class="text-2xl font-bold text-center text-blue-600 mb-4">Cumulative Charts</h2>
-                <canvas id="cifChart" class="mb-4"></canvas>
-                <canvas id="chfChart" class="mb-8"></canvas>
-        
-                <!-- Display Event Values Below the Charts as a Table -->
+        <!-- Single Prediction Content -->
+        <div x-show="selectedTab === 'single'" class="flex space-x-8" x-data="patientForm()">
+            <!-- Form Section (Left) -->
+            <div class="w-1/2 bg-white p-10 rounded-xl shadow-lg">
+                <form @submit.prevent="handleSubmit">
+                    <h2 class="text-3xl font-extrabold mb-8 text-center text-blue-600">Enter Patient Information</h2>
 
-    <div id="eventValues" class="text-left px-4">
-        <h2 class="text-xl font-bold text-blue-600 mb-4">Prediction Results</h2>
+                                    <!-- First Row: Numerical Inputs and Switches -->
+                    <div class="grid grid-cols-4 gap-10 mb-6 items-center">
+                        <div>
+                            <label for="age" class="block text-gray-700 font-medium mb-2">Age</label>
+                            <input type="number" id="age" x-model.number="formData.age" min="0" max="120" required
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
 
-        <table class="table-auto border-collapse border border-gray-400 w-full text-lg">
-            <thead>
-                <tr class="bg-gray-100">
-                    <th class="border border-gray-300 px-4 py-2 text-left" colspan="3">
-                        Predictions at Time Point: <span id="computedTimePoint"></span>
-                    </th>
-                </tr>
-                <tr class="bg-gray-100">
-                    <th class="border border-gray-300 px-4 py-2 text-left">Event</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">CIF</th>
-                    <th class="border border-gray-300 px-4 py-2 text-center">CHF</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Relapse</td>
-                    <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent1"></td>
-                    <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent1"></td>
-                </tr>
-                <tr>
-                    <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Death</td>
-                    <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent2"></td>
-                    <td class="border border-gray-300 px-4 py-2 text-center" id="chfEvent2"></td>
-                </tr>
-            </tbody>
-        </table>
+                        <div>
+                            <label for="sex_f" class="block text-gray-700 font-medium mb-2">Sex - Female?</label>
+                            <label class="switch">
+                                <input type="checkbox" id="sex_f" x-model="formData.sex_f" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="elective_adm" class="block text-gray-700 font-medium mb-2">Elective Admission?</label>
+                            <label class="switch">
+                                <input type="checkbox" id="elective_adm" x-model="formData.elective_adm" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="stroke" class="block text-gray-700 font-medium mb-2">Stroke?</label>
+                            <label class="switch">
+                                <input type="checkbox" id="stroke" x-model="formData.stroke" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Second Row: Albumin and Related Sliders -->
+                    <div class="grid grid-cols-4 gap-6 mb-6 items-center">
+                        <div>
+                            <label for="albumin" class="block text-gray-700 font-medium mb-2">Albumin Level:</label>
+                            <input type="number" id="albumin" x-model.number="formData.albumin" min="0" step="0.1"
+                                :disabled="formData.albumin_missing"
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="albumin_missing" class="block text-gray-700 font-medium mb-2">Albumin Missing?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="albumin_missing" x-model="formData.albumin_missing" tabindex="0"
+                                    x-on:change="if (formData.albumin_missing) { formData.albumin = 0.0 }">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="homelessness" class="block text-gray-700 font-medium mb-2">Homelessness?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="homelessness" x-model="formData.homelessness" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="CHF" class="block text-gray-700 font-medium mb-2">Congestive Heart Failure?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="CHF" x-model="formData.CHF" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Third Row: Creatinine and Related Sliders -->
+                    <div class="grid grid-cols-4 gap-6 mb-6 items-center">
+                        <div>
+                            <label for="creatinine" class="block text-gray-700 font-medium mb-2">Creatinine Level:</label>
+                            <input type="number" id="creatinine" x-model.number="formData.creatinine" min="0" step="0.1"
+                                :disabled="formData.creatinine_missing"
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="creatinine_missing" class="block text-gray-700 font-medium mb-2">Creatinine Missing?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="creatinine_missing" x-model="formData.creatinine_missing" tabindex="0"
+                                    x-on:change="if (formData.creatinine_missing) { formData.creatinine = 0.0 }">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="peripheral_AD" class="block text-gray-700 font-medium mb-2">Peripheral Arterial Disease?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="peripheral_AD" x-model="formData.peripheral_AD" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="hypertension" class="block text-gray-700 font-medium mb-2">Hypertension?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="hypertension" x-model="formData.hypertension" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Fourth Row: Hb A1C and Related Sliders -->
+                    <div class="grid grid-cols-4 gap-6 mb-6 items-center">
+                        <div>
+                            <label for="Hb_A1C" class="block text-gray-700 font-medium mb-2">Hb A1C Level:</label>
+                            <input type="number" id="Hb_A1C" x-model.number="formData.Hb_A1C" min="0" step="0.1"
+                                :disabled="formData.Hb_A1C_missing"
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="Hb_A1C_missing" class="block text-gray-700 font-medium mb-2">Hb A1C Missing?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="Hb_A1C_missing" x-model="formData.Hb_A1C_missing" tabindex="0"
+                                    x-on:change="if (formData.Hb_A1C_missing) { formData.Hb_A1C = 0.0 }">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="coronary_AD" class="block text-gray-700 font-medium mb-2">Coronary Artery Disease?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="coronary_AD" x-model="formData.coronary_AD" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="COPD" class="block text-gray-700 font-medium mb-2">COPD?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="COPD" x-model="formData.COPD" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Fifth Row: Prediction Time and Related Sliders -->
+                    <div class="grid grid-cols-4 gap-6 mb-6 items-center">
+                        <div>
+                            <label for="predict_at" class="block text-gray-700 font-medium mb-2">Prediction Time Horizon (Days):</label>
+                            <input type="number" id="predict_at" x-model.number="formData.predict_at" min="365" required
+                                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label for="mental_illness" class="block text-gray-700 font-medium mb-2">Mental Illness?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="mental_illness" x-model="formData.mental_illness" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="malignancy" class="block text-gray-700 font-medium mb-2">Malignancy?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="malignancy" x-model="formData.malignancy" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label for="CKD" class="block text-gray-700 font-medium mb-2">CKD?:</label>
+                            <label class="switch">
+                                <input type="checkbox" id="CKD" x-model="formData.CKD" tabindex="0">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+
+
+                    <!-- Submit and Reset Buttons -->
+                    <div class="flex space-x-6 mt-8">
+                        <button type="submit"
+                            class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+                            Submit
+                        </button>
+                        <button type="reset" @click="resetForm"
+                            class="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 focus:ring-2 focus:ring-red-400">
+                            Reset
+                        </button>
+                    </div>
+
+                    <!-- Loading Overlay -->
+                    <div x-show="isLoading" class="loading-overlay">
+                        <div class="spinner-container">
+                            <div class="spinner"></div>
+                            <div class="elapsed-time" x-text="elapsedTime + 's'"></div>
+                        </div>
+                        <p>Processing your request, please wait...</p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Chart Section (Right) -->
+            <div class="w-1/2">
+                <div class="mt-8" x-show="cifSeries.length > 0 || chfSeries.length > 0">
+                    <h2 class="text-2xl font-bold text-center text-blue-600 mb-4">Cumulative Incidence Function</h2>
+                    <canvas id="cifChart" class="mb-4"></canvas>
+                    
+
+                    <!-- Display Event Values Below the Charts as a Table -->
+                    <div id="eventValues" class="text-left px-4">
+                        <h2 class="text-xl font-bold text-blue-600 mb-4">Foot Complication Risk</h2>
+                        <table class="table-auto border-collapse border border-gray-400 w-full text-lg">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 px-4 py-2 text-left" colspan="2">
+                                        Risk at 1-year: <span id="computedTimePoint"></span>
+                                    </th>
+                                </tr>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 px-4 py-2 text-left">Event</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center">Risk(%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="border border-gray-300 px-4 py-2 text-left font-semibold">Foot complication</td>
+                                    <td class="border border-gray-300 px-4 py-2 text-center" id="cifEvent1"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                   </div>                    
+                </div>
+            </div> 
+        </div>
+
+   <!-- Batch Prediction Content -->
+<div x-show="selectedTab === 'batch'" class="flex flex-row space-x-8" x-data="csvUploader()">
+    <!-- Form Section (Left) -->
+    <div class="w-3/4 bg-white p-10 rounded-xl shadow-lg">
+        <h2 class="text-2xl font-extrabold mb-8 text-center text-blue-600">Batch Prediction via CSV Upload</h2>
+        <form @submit.prevent="handleCSVUpload">
+            <div class="mb-4">
+                <label class="block text-gray-700 font-medium mb-2" for="csvFile">Select CSV File</label>
+                <input type="file" id="csvFile" accept=".csv" @change="handleFileSelect"
+                    class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <button type="submit"
+                class="w-full bg-blue-600 text-white py-3 mt-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+                Upload and Predict
+            </button>
+        </form>
+</div>
+
+<!-- Loading Overlay -->
+<div x-show="isLoadingBatch" class="loading-overlay">
+    <div class="progress-bar-container w-3/4 bg-white p-10 rounded-xl shadow-lg text-center">
+        <h2 class="text-2xl font-extrabold mb-4 text-blue-600">Processing Batch Predictions</h2>
+        <div class="progress-bar" style="width: 100%; background-color: #f3f3f3; border-radius: 8px; overflow: hidden; margin-bottom: 20px;">
+            <div id="progressBar" style="width: 0%; height: 30px; background-color: #4caf50; transition: width 0.4s;"></div>
+        </div>
+        <p id="progressText" class="font-semibold mb-4">0% Completed</p>
+        <div id="elapsedTime" class="text-blue-600 font-bold">Elapsed Time: 0s</div>
     </div>
+</div>
 
 
-        
-        
+                                <!-- Results Section -->
+                    <div class="mt-6" x-show="results.successful_predictions.length > 0 || results.errors.length > 0">
+                        <template x-if="results.successful_predictions.length > 0">
+                            <div>
+                                <h4 class="text-lg font-bold mb-2">Successful Predictions</h4>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" :style="`width: ${(results.successful_predictions.length + results.errors.length) / totalRows * 100}%`"></div>
+                                </div>
+                                <div id="resultsTable" style="height: 400px;"></div> <!-- Tabulator container for successful predictions -->
+                            </div>
+                        </template>
+
+                        <template x-if="results.errors.length > 0">
+                            <div class="mt-8">
+                                <h4 class="text-lg font-bold mb-2 text-red-600">Errors</h4>
+                                <div id="errorsTable" style="height: 400px;"></div> <!-- Tabulator container for errors -->
+                            </div>
+                        </template>
+                    </div>
     </main>
-    
 
+    <!-- JavaScript Functions -->
     <script>
         function patientForm() {
-            return {
-                formData: {
-                    patientId: '',
-                    hospitalId: '',
-                    age: null,
-                    hgb: null,
-                    clinstg: null,
-                    predict_at: null,     // Correct key
-                    ch: 'Y',
-                    rt: 'Y'
-                },
-                cifSeries: [],
-                chfSeries: [],
-                cifChartInstance: null,  // Store CIF Chart instance
-                chfChartInstance: null,  // Store CHF Chart instance
-                async handleSubmit() {
-                    // Frontend Validation
-                    if (!this.formData.patientId || !this.formData.hospitalId || this.formData.predict_at === null) {
-                        alert('Please fill in all required fields.');
-                        return;
-                    }
-    
-                    try {
-                        const response = await fetch('http://localhost:8000/predict', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(this.formData)
-                        });
-    
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.detail || 'Prediction failed');
-                        }
-    
-                        const result = await response.json();
-                        console.log('API Response:', result);
-    
-                        this.cifSeries = result.cif_series;
-                        this.chfSeries = result.chf_series;
-                        this.renderCharts();
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert(`An error occurred: ${error.message}`);
-                    }
-                },
-                renderCharts() {
-                    this.renderChart('cifChart', 'CIF', this.cifSeries, 'cifChartInstance');
-                    this.renderChart('chfChart', 'CHF', this.chfSeries, 'chfChartInstance');
-                },
-                renderChart(canvasId, label, data, instanceProperty) {
-                    // Destroy existing chart instance if it exists
-                    if (this[instanceProperty]) {
-                        this[instanceProperty].destroy();
-                    }
+    return {
+        formData: {
+            age: null,
+            sex_f: 0,
+            elective_adm: 0,
+            homelessness: 0,
+            peripheral_AD: 0,
+            coronary_AD: 0,
+            stroke: 0,
+            CHF: 0,
+            hypertension: 0,
+            COPD: 0,
+            CKD: 0,
+            malignancy: 0,
+            mental_illness: 0,
+            creatinine: null,
+            Hb_A1C: null,
+            albumin: null,
+            Hb_A1C_missing: false,
+            creatinine_missing: false,
+            albumin_missing: false,
+            predict_at: 365
+        },
+        cifSeries: [],          // CIF values for both events
+        chfSeries: [],          // CHF values for both events
+        timePoints: [],         // Time points from API
+        cifChartInstance: null,
+        chfChartInstance: null,
+        isLoading: false,
+        elapsedTime: 0,
+        timer: null,
+        async handleSubmit() {
+            if (this.formData.age === null || this.formData.predict_at === null) {
+                alert('Please fill in all required fields.');
+                return;
+            }
 
-                    const ctx = document.getElementById(canvasId).getContext('2d');
-                    this[instanceProperty] = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: data.map((_, i) => `T${i + 1}`),
-                            datasets: [{
-                                label,
-                                data,
-                                borderColor: '#3B82F6',
-                                borderWidth: 2,
-                                pointRadius: 0,       // No points on the line
-                                pointHoverRadius: 0   // No hover effect on points
-                            }]
+            // Convert boolean form fields to 0 or 1
+            this.formData.sex_f = this.formData.sex_f ? 1 : 0;
+            this.formData.elective_adm = this.formData.elective_adm ? 1 : 0;
+            this.formData.homelessness = this.formData.homelessness ? 1 : 0;
+            this.formData.peripheral_AD = this.formData.peripheral_AD ? 1 : 0;
+            this.formData.coronary_AD = this.formData.coronary_AD ? 1 : 0;
+            this.formData.stroke = this.formData.stroke ? 1 : 0;
+            this.formData.CHF = this.formData.CHF ? 1 : 0;
+            this.formData.hypertension = this.formData.hypertension ? 1 : 0;
+            this.formData.COPD = this.formData.COPD ? 1 : 0;
+            this.formData.CKD = this.formData.CKD ? 1 : 0;
+            this.formData.malignancy = this.formData.malignancy ? 1 : 0;
+            this.formData.mental_illness = this.formData.mental_illness ? 1 : 0;
+            this.formData.Hb_A1C_missing = this.formData.Hb_A1C_missing ? 1 : 0;
+            this.formData.creatinine_missing = this.formData.creatinine_missing ? 1 : 0;
+            this.formData.albumin_missing = this.formData.albumin_missing ? 1 : 0;
+
+            this.isLoading = true;
+            this.elapsedTime = 0;
+            this.timer = setInterval(() => {
+                this.elapsedTime += 1;
+            }, 1000);
+
+            try {
+                const response = await fetch('http://localhost:8000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.formData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Prediction failed');
+                }
+
+                const result = await response.json();
+                console.log('API Response:', result);
+
+                // Store API response
+                this.cifSeries = result.cif_series;   // CIF values for both events over time
+                this.chfSeries = result.chf_series;   // CHF values for both events over time
+                this.timePoints = result.time_interest; // Time points (ensure it's correctly received)
+
+                const cifEvent1Percentage = (result.cif_event1 * 100).toFixed(2);
+
+                // Debugging Logs to verify data
+                console.log('Time Points:', this.timePoints);
+                console.log('CIF Series Event 1:', this.cifSeries[0]);
+                console.log('CIF Series Event 2:', this.cifSeries[1]);
+                console.log('CHF Series Event 1:', this.chfSeries[0]);
+                console.log('CHF Series Event 2:', this.chfSeries[1]);
+
+                // Update HTML with CIF and CHF at the specified prediction time point
+                document.getElementById('computedTimePoint').textContent = this.formData.predict_at;
+                document.getElementById('cifEvent1').textContent = cifEvent1Percentage //result.cif_event1.toFixed(4);
+
+                
+                //document.getElementById('cifEvent2').textContent = result.cif_event2.toFixed(4);
+                //document.getElementById('chfEvent1').textContent = result.chf_event1.toFixed(4);
+                //document.getElementById('chfEvent2').textContent = result.chf_event2.toFixed(4);
+
+                this.renderCharts();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`An error occurred: ${error.message}`);
+            } finally {
+                this.isLoading = false;
+                clearInterval(this.timer);
+            }
+        },
+
+        renderCharts() {
+            const formattedTimePoints = this.timePoints.map(timePoint => Math.round(Number(timePoint)));
+
+            console.log("Formatted Time Points (as integers):", formattedTimePoints);
+
+            this.renderChart('cifChart', 'Cumulative Incidence Function (CIF)', this.cifSeries, 'cifChartInstance', formattedTimePoints);
+            //this.renderChart('chfChart', 'Cumulative Hazard Function (CHF)', this.chfSeries, 'chfChartInstance', formattedTimePoints);
+        },
+
+        renderChart(canvasId, label, data, instanceProperty, formattedTimePoints) {
+            if (this[instanceProperty]) {
+                this[instanceProperty].destroy();
+            }
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+
+            if (!Array.isArray(data) || !Array.isArray(formattedTimePoints) || formattedTimePoints.length === 0) {
+                console.error('Data or time points are missing or not in the correct format for chart:', label);
+                return;
+            }
+
+            this[instanceProperty] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: formattedTimePoints,
+                    datasets: [
+                        {
+                            label: label,
+                            data: data,
+                            borderColor: label === 'Cumulative Incidence Function (CIF)' ? '#3B82F6' : '#EF4444',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointHoverRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time (days)'
+                            }
                         },
-                        options: {
-                            responsive: true,
-                            scales: {
-                                y: { beginAtZero: true }
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: label
                             }
                         }
-                    });
-                },
-
-
-                async handleSubmit() {
-                    if (!this.formData.patientId || !this.formData.hospitalId || this.formData.predict_at === null) {
-                        alert('Please fill in all required fields.');
-                        return;
                     }
+                }
+            });
+        },
 
-                    try {
-                        const response = await fetch('http://localhost:8000/predict', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(this.formData)
-                        });
+        resetForm() {
+            this.formData = {
+                age: null,
+                sex_f: 0,
+                elective_adm: 0,
+                homelessness: 0,
+                peripheral_AD: 0,
+                coronary_AD: 0,
+                stroke: 0,
+                CHF: 0,
+                hypertension: 0,
+                COPD: 0,
+                CKD: 0,
+                malignancy: 0,
+                mental_illness: 0,
+                creatinine: null,
+                Hb_A1C: null,
+                albumin: null,
+                Hb_A1C_missing: false,
+                creatinine_missing: false,
+                albumin_missing: false,
+                predict_at: 365
+            };
+            this.cifSeries = [];
+            this.chfSeries = [];
+            this.timePoints = [];
+            if (this.cifChartInstance) this.cifChartInstance.destroy();
+            if (this.chfChartInstance) this.chfChartInstance.destroy();
 
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.detail || 'Prediction failed');
+            this.$nextTick(() => {
+                const ageInput = document.getElementById('age');
+                if (ageInput) {
+                    ageInput.focus();
+                    ageInput.select();
+                }
+            });
+        }
+    };
+}
+
+function csvUploader() {
+    return {
+        file: null,
+        results: {
+            successful_predictions: [],
+            errors: []
+        },
+        totalRows: 0,
+        processedRows: 0,
+        isLoadingBatch: false,
+        elapsedTime: 0,
+        timer: null,
+        handleFileSelect(event) {
+            this.file = event.target.files[0];
+
+            if (this.file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const lines = e.target.result.split("\n");
+                    this.totalRows = lines.length - 1;
+                };
+                reader.readAsText(this.file);
+            }
+        },
+        async handleCSVUpload() {
+            if (!this.file) {
+                alert('Please select a CSV file.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const csvContent = e.target.result;
+                    const rows = csvContent.split("\n");
+                    const headers = rows[0].split(",");
+
+                    this.totalRows = rows.length - 1;
+                    this.isLoadingBatch = true;
+                    this.elapsedTime = 0;
+                    this.processedRows = 0;
+
+                    this.timer = setInterval(() => {
+                        this.elapsedTime += 1;
+                        document.getElementById('elapsedTime').textContent = `Elapsed Time: ${this.elapsedTime}s`;
+                    }, 1000);
+
+                    for (let i = 1; i < rows.length; i++) {
+                        if (rows[i].trim() === "") {
+                            continue;
                         }
+                        const rowData = rows[i].split(",");
+                        const inputData = this.mapRowToInput(headers, rowData);
 
-                        const result = await response.json();
-                        console.log('API Response:', result);
-
-                        // Store and Render Charts
-                        this.cifSeries = result.cif_series;
-                        this.chfSeries = result.chf_series;
-                        this.renderCharts();
-
-                        // Populate the table with event values
-                        document.getElementById('computedTimePoint').textContent = this.formData.predict_at;
-                        document.getElementById('cifEvent1').textContent = result.cif_event1.toFixed(4);
-                        document.getElementById('cifEvent2').textContent = result.cif_event2.toFixed(4);
-                        document.getElementById('chfEvent1').textContent = result.chf_event1.toFixed(4);
-                        document.getElementById('chfEvent2').textContent = result.chf_event2.toFixed(4);
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert(`An error occurred: ${error.message}`);
+                        await this.processSingleRow(inputData, i - 1);
                     }
-                },
 
+                    this.$nextTick(() => {
+                        this.renderResultsTable();
+                        this.renderErrorsTable();
+                        this.createDownloadButtons();
+                    });
 
-
-                resetForm() {
-                    this.formData = {
-                        patientId: '',
-                        hospitalId: '',
-                        age: null,
-                        hgb: null,
-                        clinstg: null,
-                        predict_at: null,  // Correct key
-                        ch: 'Y',
-                        rt: 'Y'
-                    };
-                    this.cifSeries = [];
-                    this.chfSeries = [];
-                    // Destroy existing chart instances
-                    if (this.cifChartInstance) this.cifChartInstance.destroy();
-                    if (this.chfChartInstance) this.chfChartInstance.destroy();
+                } catch (error) {
+                    console.error('Error processing CSV file:', error);
+                    alert('An error occurred while processing the CSV file.');
+                } finally {
+                    this.isLoadingBatch = false;
+                    clearInterval(this.timer);
                 }
             };
-        }
-    </script>
-    
-</body>
 
+            reader.readAsText(this.file);
+        },
+        mapRowToInput(headers, rowData) {
+            const input = {};
+            headers.forEach((header, index) => {
+                input[header.trim()] = rowData[index].trim();
+            });
+            return input;
+        },
+        async processSingleRow(inputData, rowIndex) {
+            try {
+                const response = await fetch('http://localhost:8000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(inputData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                const predictionResult = await response.json();
+
+                this.results.successful_predictions.push({
+                    row_index: rowIndex,
+                    timestamp: new Date().toLocaleString(),
+                    input_data: inputData,
+                    prediction: predictionResult
+                });
+            } catch (error) {
+                this.results.errors.push({
+                    row_index: rowIndex,
+                    input_data: inputData,
+                    error: error.message
+                });
+            } finally {
+                this.processedRows++;
+                this.updateProgressBar();
+            }
+        },
+        updateProgressBar() {
+            const progressPercentage = Math.floor((this.processedRows / this.totalRows) * 100);
+            document.getElementById('progressBar').style.width = `${progressPercentage}%`;
+            document.getElementById('progressText').textContent = `${progressPercentage}% Completed`;
+        },
+        jsonTreeFormatter(cell, formatterParams) {
+            const data = cell.getValue();
+            const container = document.createElement("div");
+            container.style.maxHeight = "200px";
+            container.style.overflowY = "auto";
+
+            function createTreeNode(data, parent) {
+                if (typeof data === "object" && data !== null) {
+                    const isCollapsible = Object.keys(data).length > 0;
+                    const node = document.createElement("div");
+                    node.classList.add("tree-node");
+
+                    if (isCollapsible) {
+                        const toggle = document.createElement("span");
+                        toggle.classList.add("toggle");
+                        toggle.textContent = "+";
+                        toggle.style.cursor = "pointer";
+
+                        const childrenContainer = document.createElement("div");
+                        childrenContainer.style.display = "none";
+                        childrenContainer.classList.add("children");
+
+                        toggle.addEventListener("click", () => {
+                            const expanded = childrenContainer.style.display === "block";
+                            childrenContainer.style.display = expanded ? "none" : "block";
+                            toggle.textContent = expanded ? "+" : "-";
+                        });
+
+                        node.appendChild(toggle);
+                        Object.entries(data).forEach(([key, value]) => {
+                            const child = document.createElement("div");
+                            child.classList.add("child");
+                            child.innerHTML = `<strong>${key}:</strong> ${typeof value === "object" ? "" : value}`;
+                            if (typeof value === "object") {
+                                createTreeNode(value, child);
+                            }
+                            childrenContainer.appendChild(child);
+                        });
+                        node.appendChild(childrenContainer);
+                    } else {
+                        node.innerHTML = JSON.stringify(data);
+                    }
+                    parent.appendChild(node);
+                }
+            }
+
+            createTreeNode(data, container);
+            return container;
+        },
+        renderResultsTable() {
+            if (this.results.successful_predictions.length > 0) {
+                new Tabulator("#resultsTable", {
+                    data: this.results.successful_predictions,
+                    layout: "fitColumns",
+                    columns: [
+                        { title: "Row Index", field: "row_index", width: 80 },
+                        { title: "Timestamp", field: "timestamp", width: 150 },
+                        {
+                            title: "Input Data",
+                            field: "input_data",
+                            formatter: this.jsonTreeFormatter,
+                            widthGrow: 2
+                        },
+                        { title: "CIF Event 1", field: "prediction.cif_event1", width: 100 },
+                        { title: "CIF Event 2", field: "prediction.cif_event2", width: 100 },
+                        { title: "CHF Event 1", field: "prediction.chf_event1", width: 100 },
+                        { title: "CHF Event 2", field: "prediction.chf_event2", width: 100 },
+                    ],
+                    height: "400px",
+                    resizableColumns: true,
+                });
+            }
+        },
+        renderErrorsTable() {
+            if (this.results.errors.length > 0) {
+                new Tabulator("#errorsTable", {
+                    data: this.results.errors,
+                    layout: "fitColumns",
+                    columns: [
+                        { title: "Row Index", field: "row_index", width: 100 },
+                        {
+                            title: "Input Data",
+                            field: "input_data",
+                            formatter: this.jsonTreeFormatter,
+                            widthGrow: 2
+                        },
+                        { title: "Error", field: "error", formatter: "textarea", widthGrow: 2, cssClass: "text-red-600" },
+                    ],
+                    height: "400px",
+                    resizableColumns: true,
+                });
+            }
+        },
+        downloadResultsJSON(filename, data) {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", filename);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        },
+        createDownloadButtons() {
+            console.log("Creating download buttons...");
+
+            const resultsTableContainer = document.getElementById('resultsTableContainer');
+            const errorsTableContainer = document.getElementById('errorsTableContainer');
+
+            if (resultsTableContainer) {
+                resultsTableContainer.innerHTML = "";
+            }
+            if (errorsTableContainer) {
+                errorsTableContainer.innerHTML = "";
+            }
+
+            if (this.results.successful_predictions.length > 0) {
+                const successfulDownloadButton = document.createElement("button");
+                successfulDownloadButton.textContent = "Download Successful Predictions JSON";
+                successfulDownloadButton.classList.add("download-button", "bg-green-500", "text-white", "px-4", "py-2", "rounded", "mt-4");
+                successfulDownloadButton.addEventListener("click", () => {
+                    this.downloadResultsJSON("successful_predictions.json", this.results.successful_predictions);
+                });
+
+                if (resultsTableContainer) {
+                    resultsTableContainer.appendChild(successfulDownloadButton);
+                }
+            }
+
+            if (this.results.errors.length > 0) {
+                const errorsDownloadButton = document.createElement("button");
+                errorsDownloadButton.textContent = "Download Errors JSON";
+                errorsDownloadButton.classList.add("download-button", "bg-red-500", "text-white", "px-4", "py-2", "rounded", "mt-4");
+                errorsDownloadButton.addEventListener("click", () => {
+                    this.downloadResultsJSON("errors.json", this.results.errors);
+                });
+
+                if (errorsTableContainer) {
+                    errorsTableContainer.appendChild(errorsDownloadButton);
+                }
+            }
+        }
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const ageInput = document.getElementById('age');
+    if (ageInput) {
+        ageInput.focus();
+        ageInput.select();
+    }
+
+    const form = document.querySelector('form');
+    const focusableElements = form.querySelectorAll('input, button, select, textarea, [tabindex]:not([tabindex="-1"])');
+
+    focusableElements.forEach((element, index) => {
+        element.tabIndex = index + 1;
+    });
+
+    focusableElements.forEach((element, index) => {
+        element.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                const nextIndex = (index + 1) % focusableElements.length;
+                focusableElements[nextIndex].focus();
+            }
+        });
+    });
+});
+
+    </script>
+</body>
 </html>
