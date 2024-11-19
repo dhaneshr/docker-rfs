@@ -185,12 +185,34 @@
     </style>
 </head>
 <body class="bg-gray-50 flex flex-col min-h-screen">
-    <!-- Header -->
-    <header class="bg-cover bg-center text-blue py-8" style="background-image: url('/resources/banner.png');">
-        <div class="max-w-2xl mx-auto text-center">
-            <!-- Optional header content -->
+   
+            <!-- Header -->
+        <header class="bg-cover bg-center text-blue py-8 relative" 
+        style="
+            background-image: url('/resources/new-banner.png'); 
+            background-size: cover; 
+            background-position: center; 
+            height: 200px; /* Set a fixed height */
+        ">
+        <!-- Text Content -->
+        <div style="
+            position: absolute; 
+            top: 50%; 
+            right: 300px; /* Offset 300px from the right */
+            transform: translateY(-50%); 
+            color: white; /* Adjust text color for visibility */
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Add text shadow for better readability */
+        ">
+        <h1 class="text-4xl font-bold">
+            Limb Amputation Risk Predictor
+        </h1>
+        <p class="text-lg mt-2">
+            A Joint Research Project by the Vector Institute and GEMINI.
+        </p>
         </div>
-    </header>
+        </header>
+
+
 
     <!-- Main Content -->
     <main class="flex-grow max-w-6xl mx-auto px-4 py-4" x-data="{ selectedTab: 'single' }">
