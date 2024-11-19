@@ -37,6 +37,7 @@ RUN Rscript /app/R_dependencies.R
 
 
 WORKDIR /app
+RUN mkdir /app/local_data
 COPY app.py /app/
 COPY dummy_model_clean2.RData /app/
 COPY resources/ /app/resources/
