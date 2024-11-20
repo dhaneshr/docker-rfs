@@ -65,6 +65,8 @@ app = FastAPI()
 # Serve static files from the "resources" directory
 app.mount("/resources", StaticFiles(directory="resources"), name="resources")
 
+# Mount the static directory to serve JavaScript and CSS files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
@@ -325,9 +327,6 @@ def store_prediction(db: sqlite3.Connection, input: ModelInput, prediction_resul
 def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-@app.get("/favicon.ico", include_in_schema=False)
-async def favicon():
-    return Response(status_code=204)
 
 # Prediction endpoint using the loaded model in memory
 @app.post("/predict")
