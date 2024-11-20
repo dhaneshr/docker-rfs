@@ -43,9 +43,11 @@ COPY dummy_model_clean2.RData /app/
 COPY resources/ /app/resources/
 COPY templates/ /app/templates/
 COPY local_data /app/local_data
+COPY static/ /app/static/
 
 
-RUN chmod -R 755 /app/resources /app/local_data
+RUN chmod -R 755 /app/resources /app/local_data /app/static
+
 
 
 EXPOSE 8000
