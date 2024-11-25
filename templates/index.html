@@ -565,6 +565,15 @@
                 return;
             }
 
+
+            // Check if Albumin, Creatinine, and Hb A1C are provided or marked as missing
+            if ((this.formData.albumin === null && !this.formData.albumin_missing) ||
+                (this.formData.creatinine === null && !this.formData.creatinine_missing) ||
+                (this.formData.Hb_A1C === null && !this.formData.Hb_A1C_missing)) {
+                alert('Please provide values for Albumin, Creatinine, and Hb A1C, or mark them as missing.');
+                return;
+            }
+
             // Convert boolean form fields to 0 or 1
             this.formData.sex_f = this.formData.sex_f ? 1 : 0;
             this.formData.elective_adm = this.formData.elective_adm ? 1 : 0;
