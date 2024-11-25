@@ -5,28 +5,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Limb Amputation Risk Predictor</title>
-    <link href="https://unpkg.com/tabulator-tables@5.4.3/dist/css/tabulator.min.css" rel="stylesheet">
-    <script src="https://unpkg.com/tabulator-tables@5.4.3/dist/js/tabulator.min.js"></script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Link to local CSS files -->
+    <link href="/static/tabulator.min.css" rel="stylesheet">
+    <link href="/static/tailwind.min.css" rel="stylesheet">
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+
+    <!-- Local JavaScript files -->
+    <script src="/static/tabulator.min.js"></script>
+    <script src="/static/cdn.min.js" defer></script>
+    <script src="/static/chart.js"></script>
+
+
     <style>
 
-            /* Grid layout adjustment for the row */
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1.5rem; /* Adjust the gap between columns if needed */
-        align-items: center; /* Align all items in the center of their row */
-    }
+        /* Grid layout adjustment for the row */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem; /* Adjust the gap between columns if needed */
+            align-items: center; /* Align all items in the center of their row */
+        }
 
-/* Optional - Center the sliders specifically */
-.switch {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        /* Optional - Center the sliders specifically */
+        .switch {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
         /* Existing CSS styles */
         .switch {
@@ -446,7 +453,7 @@
                             <thead>
                                 <tr class="bg-gray-100">
                                     <th class="border border-gray-300 px-4 py-2 text-left" colspan="2">
-                                        Risk at: <span id="computedTimePoint">days</span>
+                                        Risk at: <span id="computedTimePoint"></span> days
                                     </th>
                                 </tr>
                                 <tr class="bg-gray-100">
@@ -555,6 +562,15 @@
         async handleSubmit() {
             if (this.formData.age === null || this.formData.predict_at === null) {
                 alert('Please fill in all required fields.');
+                return;
+            }
+
+
+            // Check if Albumin, Creatinine, and Hb A1C are provided or marked as missing
+            if ((this.formData.albumin === null && !this.formData.albumin_missing) ||
+                (this.formData.creatinine === null && !this.formData.creatinine_missing) ||
+                (this.formData.Hb_A1C === null && !this.formData.Hb_A1C_missing)) {
+                alert('Please provide values for Albumin, Creatinine, and Hb A1C, or mark them as missing.');
                 return;
             }
 
