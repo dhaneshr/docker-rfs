@@ -20,32 +20,26 @@ from enum import Enum
 from fastapi import File, UploadFile
 from io import StringIO, BytesIO
 
-
 DATABASE_PATH = '/app/local_data/predictions.db'
 
 # Global variable to hold the R model in memory
 global_model = None
 
-
 # Activate automatic conversion of pandas DataFrames to R DataFrames
 pandas2ri.activate()
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 def load_r_libraries():
-    robjects.r('library(randomForestSRC)')
-    robjects.r('library(ggplot2)')
-    robjects.r('library(scales)')
-    robjects.r('library(survival)')
-
+    robjects.r('library(rms)')
+    robjects.r('library(riskRegression)')
+    robjects.r('library(prodlim)')
 
 def load_r_model():
     global global_model
     try:
-        robjects.r('load("dummy_model_clean2.RData")')
+        robjects.r('load("final_FGR_clean.RData")')
         if 'model' in robjects.globalenv:
             global_model = robjects.globalenv['model']
             logger.info("R model loaded successfully into global environment.")
@@ -58,7 +52,6 @@ def load_r_model():
 
 load_r_libraries()
 load_r_model()
-
 
 app = FastAPI()
 
@@ -79,8 +72,6 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-
-
 def get_db():
     if not os.path.exists(DATABASE_PATH):
         logger.warning("Database not found. Initializing...")
@@ -91,7 +82,6 @@ def get_db():
         yield conn
     finally:
         conn.close()
-
 
 def initialize_db():
     """Create the database and initialize the predictions table if not present."""
@@ -198,7 +188,6 @@ class ModelInputCSV(BaseModel):
     albumin_missing: int
     predict_at: int
 
-
 # Helper functions
 def prepare_input_data(input: ModelInput) -> pd.DataFrame:
     data = {
@@ -225,6 +214,22 @@ def prepare_input_data(input: ModelInput) -> pd.DataFrame:
     logger.debug(f"Prepared input data for model: {data}")
     df = pd.DataFrame(data)
     logger.debug(f"DataFrame created:\n{df}")
+
+    # Add spline components to data
+    age_splines = robjects.r['rcs'](df['age'], global_model.rx2('params').rx2('age_knots'))
+    creatinine_splines = robjects.r['rcs'](df['creatinine'], global_model.rx2('params').rx2('creatinine_knots'))
+    Hb_A1C_splines = robjects.r['rcs'](df['Hb_A1C'], global_model.rx2('params').rx2('hba1c_knots'))
+    albumin_splines = robjects.r['rcs'](df['albumin'], global_model.rx2('params').rx2('albumin_knots'))
+
+    df['age1'] = age_splines[:, 1]
+    df['age2'] = age_splines[:, 2]
+    df['creatinine1'] = creatinine_splines[:, 1]
+    df['creatinine2'] = creatinine_splines[:, 2]
+    df['Hb_A1C1'] = Hb_A1C_splines[:, 1]
+    df['Hb_A1C2'] = Hb_A1C_splines[:, 2]
+    df['albumin1'] = albumin_splines[:, 1]
+
+    logger.debug(f"DataFrame with spline components:\n{df}")
     return df
 
 def make_prediction(new_data: pd.DataFrame) -> dict:
@@ -334,10 +339,10 @@ def predict(input: ModelInput, db: sqlite3.Connection = Depends(get_db)):
     try:
         new_data = prepare_input_data(input)
         predictions = make_prediction(new_data)
+        # Extract relevant information for the prediction result (e.g., CIF at specified time point)
         prediction_result = extract_prediction_details(predictions, input.predict_at)
-
+        # Store prediction in the database
         store_prediction(db, input, prediction_result)
-
         return prediction_result
     except Exception as e:
         logger.error("Error during prediction: %s", traceback.format_exc())
@@ -428,19 +433,19 @@ def predict_csv(file: UploadFile = File(...), db: sqlite3.Connection = Depends(g
     processes each row, and returns predictions.
     """
     try:
-        # Read the uploaded file
+       
         content = file.file.read()
         # Detect if the file is uploaded as bytes or string
         if isinstance(content, bytes):
             content = content.decode('utf-8')
         
-        # Use StringIO to read the CSV content into a Pandas DataFrame
+        
         csv_file = StringIO(content)
         df = pd.read_csv(csv_file)
         logger.info("CSV file read successfully.")
         logger.info("DataFrame head:\n%s", df.head())
         
-        # Optionally, validate the DataFrame columns
+        # validate the DataFrame columns
         required_columns = [
             'age', 'sex_f', 'elective_adm', 'homelessness', 'peripheral_AD', 'coronary_AD', 'stroke',
             'CHF', 'hypertension', 'COPD', 'CKD', 'malignancy', 'mental_illness', 'creatinine',
@@ -474,23 +479,19 @@ def predict_csv(file: UploadFile = File(...), db: sqlite3.Connection = Depends(g
             'albumin': 'float64'
         })
         
-        # Initialize lists to store successful predictions and errors
+        
         successful_predictions = []
         errors = []
         
-        # Iterate over each row in the DataFrame
+        
         for index, row in df.iterrows():
             try:
-                # Convert the row to a dictionary
+               
                 input_data = row.to_dict()
-                
-                # Replace NaN with None
                 input_data = {k: (v if pd.notna(v) else None) for k, v in input_data.items()}
-                
-                # Validate and convert the input data using ModelInputCSV
                 input_model = ModelInputCSV(**input_data)
                 
-                # Prepare data for prediction
+                
                 new_data = prepare_input_data(input_model)
                 predictions = make_prediction(robjects.globalenv['model'], new_data)
                 prediction_result = extract_prediction_details(predictions, input_model.predict_at)
@@ -505,17 +506,16 @@ def predict_csv(file: UploadFile = File(...), db: sqlite3.Connection = Depends(g
                     "prediction": prediction_result
                 })
             except Exception as e:
-                # Log the error with detailed information
+                
                 logger.error(f"Error processing row {index}: {e}")
                 logger.debug("Traceback: %s", traceback.format_exc())
-                # Append the error details to the errors list
                 errors.append({
                     "row_index": index,
                     "input_data": input_data,
                     "error": str(e)
                 })
         
-        # Return the results with successful predictions and errors
+        
         return {
             "successful_predictions": successful_predictions,
             "errors": errors
