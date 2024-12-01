@@ -552,10 +552,8 @@
             predict_at: 365
         },
         cifSeries: [],          // CIF values for both events
-        chfSeries: [],          // CHF values for both events
         timePoints: [],         // Time points from API
         cifChartInstance: null,
-        chfChartInstance: null,
         isLoading: false,
         elapsedTime: 0,
         timer: null,
@@ -616,11 +614,11 @@
                 this.cifSeries = result.cif_series;   // CIF values for both events over time
                 this.timePoints = result.time_interest; // Time points (ensure it's correctly received)
 
-                const cifEvent1Percentage = (result.cif_event1 * 100).toFixed(2);
+                const cifEvent1Percentage = (result.cif_event1 * 100).toFixed(4);
 
                 // Debugging Logs to verify data
                 console.log('Time Points:', this.timePoints);
-                console.log('CIF for Foot Complication:', this.cifSeries[0]);
+                console.log('Foor complication Risk:', this.cifSeries[0]);
                 
                
 
@@ -645,10 +643,11 @@
 
         renderCharts() {
             const formattedTimePoints = this.timePoints.map(timePoint => Math.round(Number(timePoint)));
+            const percentageRisk = this.cifSeries.map(value => (value * 100).toFixed(4));
 
             console.log("Formatted Time Points (as integers):", formattedTimePoints);
 
-            this.renderChart('cifChart', 'Cumulative Incidence Function (CIF)', this.cifSeries, 'cifChartInstance', formattedTimePoints);
+            this.renderChart('cifChart', 'Foot Complication Risk(%)', percentageRisk, 'cifChartInstance', formattedTimePoints);
            
         },
 
@@ -672,7 +671,7 @@
                         {
                             label: label,
                             data: data,
-                            borderColor: label === 'Cumulative Incidence Function (CIF)' ? '#3B82F6' : '#EF4444',
+                            borderColor: label === 'Foot Complication Risk(%)' ? '#3B82F6' : '#3B82F6',
                             borderWidth: 2,
                             pointRadius: 0,
                             pointHoverRadius: 0
