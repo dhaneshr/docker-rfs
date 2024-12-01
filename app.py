@@ -19,6 +19,9 @@ import os
 from enum import Enum
 from fastapi import File, UploadFile
 from io import StringIO, BytesIO
+from rpy2.robjects.packages import importr
+from rpy2.robjects.conversion import localconverter
+
 
 DATABASE_PATH = '/app/local_data/predictions.db'
 
@@ -31,10 +34,19 @@ pandas2ri.activate()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+# Import R packages
+rms = importr('rms')
+risk_regression = importr('riskRegression')
+prodlim = importr('prodlim')
+Hmisc = importr('Hmisc')  # Ensure Hmisc is imported
+
 def load_r_libraries():
     robjects.r('library(rms)')
     robjects.r('library(riskRegression)')
     robjects.r('library(prodlim)')
+    robjects.r('library(Hmisc)')  
+
 
 def load_r_model():
     global global_model
@@ -188,7 +200,6 @@ class ModelInputCSV(BaseModel):
     albumin_missing: int
     predict_at: int
 
-# Helper functions
 def prepare_input_data(input: ModelInput) -> pd.DataFrame:
     data = {
         'age': [input.age],
@@ -211,23 +222,46 @@ def prepare_input_data(input: ModelInput) -> pd.DataFrame:
         'creatinine_missing': [input.creatinine_missing],
         'albumin_missing': [input.albumin_missing],
     }
-    logger.debug(f"Prepared input data for model: {data}")
     df = pd.DataFrame(data)
     logger.debug(f"DataFrame created:\n{df}")
 
-    # Add spline components to data
-    age_splines = robjects.r['rcs'](df['age'], global_model.rx2('params').rx2('age_knots'))
-    creatinine_splines = robjects.r['rcs'](df['creatinine'], global_model.rx2('params').rx2('creatinine_knots'))
-    Hb_A1C_splines = robjects.r['rcs'](df['Hb_A1C'], global_model.rx2('params').rx2('hba1c_knots'))
-    albumin_splines = robjects.r['rcs'](df['albumin'], global_model.rx2('params').rx2('albumin_knots'))
+    try:
+        # Convert pandas DataFrame to R data frame
+        with localconverter(robjects.default_converter + pandas2ri.converter):
+            r_df = robjects.conversion.py2rpy(df)
 
-    df['age1'] = age_splines[:, 1]
-    df['age2'] = age_splines[:, 2]
-    df['creatinine1'] = creatinine_splines[:, 1]
-    df['creatinine2'] = creatinine_splines[:, 2]
-    df['Hb_A1C1'] = Hb_A1C_splines[:, 1]
-    df['Hb_A1C2'] = Hb_A1C_splines[:, 2]
-    df['albumin1'] = albumin_splines[:, 1]
+        # Extract knots from the R model
+        model_params = global_model.rx2('params')
+        age_knots = model_params.rx2('age_knots')
+        creatinine_knots = model_params.rx2('creatinine_knots')
+        hba1c_knots = model_params.rx2('hba1c_knots')
+        albumin_knots = model_params.rx2('albumin_knots')
+
+        # Generate spline basis functions using Hmisc.rcspline_eval
+        age_splines = Hmisc.rcspline_eval(r_df.rx2('age'), knots=age_knots, inclx=True)
+        creatinine_splines = Hmisc.rcspline_eval(r_df.rx2('creatinine'), knots=creatinine_knots, inclx=True)
+        Hb_A1C_splines = Hmisc.rcspline_eval(r_df.rx2('Hb_A1C'), knots=hba1c_knots, inclx=True)
+        albumin_splines = Hmisc.rcspline_eval(r_df.rx2('albumin'), knots=albumin_knots, inclx=True)
+
+        # Convert spline results back to pandas DataFrames
+        with localconverter(robjects.default_converter + pandas2ri.converter):
+            age_splines_np = np.array(robjects.conversion.rpy2py(age_splines))
+            creatinine_splines_np = np.array(robjects.conversion.rpy2py(creatinine_splines))
+            Hb_A1C_splines_np = np.array(robjects.conversion.rpy2py(Hb_A1C_splines))
+            albumin_splines_np = np.array(robjects.conversion.rpy2py(albumin_splines))
+
+        # Add non-linear components to the pandas DataFrame using NumPy indexing
+        df['age1'] = age_splines_np[:, 1]  # Second column
+        df['age2'] = age_splines_np[:, 2]  # Third column
+        df['creatinine1'] = creatinine_splines_np[:, 1]
+        df['creatinine2'] = creatinine_splines_np[:, 2]
+        df['Hb_A1C1'] = Hb_A1C_splines_np[:, 1]
+        df['Hb_A1C2'] = Hb_A1C_splines_np[:, 2]
+        df['albumin1'] = albumin_splines_np[:, 1]
+
+    except Exception as e:
+        logger.error("Error while generating splines: %s", traceback.format_exc())
+        raise HTTPException(status_code=500, detail="Error during spline generation")
 
     logger.debug(f"DataFrame with spline components:\n{df}")
     return df
@@ -237,52 +271,95 @@ def make_prediction(new_data: pd.DataFrame) -> dict:
     if global_model is None:
         raise RuntimeError("R model is not loaded.")
     logger.debug("Starting prediction with R model.")
-    try:
-        r_env = Environment()
-        r_new_data = pandas2ri.py2rpy(new_data)
-        r_env['r_new_data'] = r_new_data
-        r_env['model'] = global_model
+    
+    # Suppress R console output
+    import rpy2.rinterface_lib.callbacks
 
-        # Make predictions
-        predict_func = robjects.r('predict')
-        predictions = predict_func(r_env['model'], newdata=r_env['r_new_data'])
-        logger.debug("Prediction successful.")
-        return predictions
+    # Define a callback to suppress warnings/messages
+    def console_write_disable(x):
+        pass
+
+    # Store the original console write function to restore later
+    original_console_write = rpy2.rinterface_lib.callbacks.consolewrite_print
+
+    # Suppress the console output
+    rpy2.rinterface_lib.callbacks.consolewrite_print = console_write_disable
+
+    try:
+        # Convert pandas DataFrame to R data frame
+        with localconverter(robjects.default_converter + pandas2ri.converter):
+            r_new_data = robjects.conversion.py2rpy(new_data)
+
+        predict_func = robjects.r['predict']
+
+        # Predict at 1-year time point
+        one_year_time = robjects.FloatVector([365.25])
+        one_year_prediction = predict_func(global_model, newdata=r_new_data, times=one_year_time)
+
+        # Convert to NumPy array
+        one_year_prediction_np = np.array(one_year_prediction)
+        logger.debug(f"one_year_prediction (NumPy array): {one_year_prediction_np}")
+
+        # Extract the predicted value
+        if len(one_year_prediction_np) > 0:
+            one_year_risk = one_year_prediction_np[0]
+        else:
+            raise ValueError("Prediction returned an empty array for one-year risk.")
+
+        logger.debug(f"Predicted risk at 1 year: {one_year_risk}")
+
+        # Predict over multiple time points
+        time_points = np.arange(1, 365 * 5 + 1, 5)  # Up to 5 years in steps of 5 days
+        time_points_r = robjects.FloatVector(time_points)
+        multiple_time_predictions = predict_func(global_model, newdata=r_new_data, times=time_points_r)
+
+        # Convert the multiple time predictions to a NumPy array
+        multiple_time_predictions_np = np.array(multiple_time_predictions[0])
+        logger.debug(f"multiple_time_predictions (NumPy array, shape: {multiple_time_predictions_np.shape}): {multiple_time_predictions_np}")
+
+        if multiple_time_predictions_np.size != len(time_points):
+            raise ValueError("Mismatch between number of time points and predicted risks.")
+
+        time_points_list = time_points.tolist()
+
+        return {
+            'one_year_risk': float(one_year_risk),
+            'time_points': time_points_list,
+            'predicted_risks': multiple_time_predictions_np.tolist()
+        }
+
     except Exception as e:
         logger.error("Error during R model prediction: %s", traceback.format_exc())
-        raise e
+        raise HTTPException(status_code=500, detail="Error during prediction")
+
+    finally:
+        # Restore the original console write function
+        rpy2.rinterface_lib.callbacks.consolewrite_print = original_console_write
+
+
+
 
 
 def extract_prediction_details(predictions, time_point: int) -> dict:
-    cif = np.array(predictions.rx2('cif')[0])
-    chf = np.array(predictions.rx2('chf')[0])
-    time_interest = np.array(predictions.rx2('time.interest'))
-
-    # Convert arrays to lists
-    cif_series = cif[:, 0].astype(float).tolist()
-    chf_series = chf[:, 0].astype(float).tolist()
+    time_points = np.array(predictions['time_points'])
+    predicted_risks = np.array(predictions['predicted_risks'])
 
     # Find the closest time index to the requested time point
-    time_index = int(np.argmin(np.abs(time_interest - time_point)))
+    time_index = int(np.argmin(np.abs(time_points - time_point)))
 
-    # Extract individual event values
-    cif_event1_at_time = float(cif[time_index, 0])
-    cif_event2_at_time = float(cif[time_index, 1])
-    chf_event1_at_time = float(chf[time_index, 0])
-    chf_event2_at_time = float(chf[time_index, 1])
+    # Extract individual risk value at the requested time point
+    risk_at_time = float(predicted_risks[time_index])
 
-    # Prepare response with both the series and individual event values
+    # Prepare response with both the series and individual risk value
     prediction_result = {
-        "cif_series": cif_series,
-        "chf_series": chf_series,
-        "cif_event1": cif_event1_at_time,
-        "cif_event2": cif_event2_at_time,
-        "chf_event1": chf_event1_at_time,
-        "chf_event2": chf_event2_at_time,
-        "time_interest": time_interest.tolist()
+        "one_year_risk": predictions['one_year_risk'],
+        "time_points": time_points.tolist(),
+        "predicted_risks": predicted_risks.tolist(),
+        "risk_at_time": risk_at_time
     }
     logger.debug(f"Extracted prediction details: {prediction_result}")
     return prediction_result
+
 
 def store_prediction(db: sqlite3.Connection, input: ModelInput, prediction_result: dict):
     insert_values = None  # Initialize insert_values
@@ -338,7 +415,9 @@ def read_root(request: Request):
 def predict(input: ModelInput, db: sqlite3.Connection = Depends(get_db)):
     try:
         new_data = prepare_input_data(input)
+        logger.info("Prepared input data for prediction.")
         predictions = make_prediction(new_data)
+        logger.info("Prediction successful.")
         # Extract relevant information for the prediction result (e.g., CIF at specified time point)
         prediction_result = extract_prediction_details(predictions, input.predict_at)
         # Store prediction in the database
@@ -433,72 +512,45 @@ def predict_csv(file: UploadFile = File(...), db: sqlite3.Connection = Depends(g
     processes each row, and returns predictions.
     """
     try:
-       
         content = file.file.read()
-        # Detect if the file is uploaded as bytes or string
+        # Decode bytes to string if necessary
         if isinstance(content, bytes):
             content = content.decode('utf-8')
-        
-        
+
         csv_file = StringIO(content)
         df = pd.read_csv(csv_file)
         logger.info("CSV file read successfully.")
-        logger.info("DataFrame head:\n%s", df.head())
-        
-        # validate the DataFrame columns
+
+        # Validate the DataFrame columns
         required_columns = [
             'age', 'sex_f', 'elective_adm', 'homelessness', 'peripheral_AD', 'coronary_AD', 'stroke',
             'CHF', 'hypertension', 'COPD', 'CKD', 'malignancy', 'mental_illness', 'creatinine',
             'Hb_A1C', 'albumin', 'Hb_A1C_missing', 'creatinine_missing', 'albumin_missing', 'predict_at'
         ]
-        if not all(column in df.columns for column in required_columns):
-            missing_cols = list(set(required_columns) - set(df.columns))
+        missing_cols = [col for col in required_columns if col not in df.columns]
+        if missing_cols:
             raise HTTPException(status_code=400, detail=f"Missing columns in CSV: {missing_cols}")
-        
-        # Enforce data types and handle NaN values
-        df = df.astype({
-            'age': 'Int64',
-            'sex_f': 'Int64',
-            'elective_adm': 'Int64',
-            'homelessness': 'Int64',
-            'peripheral_AD': 'Int64',
-            'coronary_AD': 'Int64',
-            'stroke': 'Int64',
-            'CHF': 'Int64',
-            'hypertension': 'Int64',
-            'COPD': 'Int64',
-            'CKD': 'Int64',
-            'malignancy': 'Int64',
-            'mental_illness': 'Int64',
-            'Hb_A1C_missing': 'Int64',
-            'creatinine_missing': 'Int64',
-            'albumin_missing': 'Int64',
-            'predict_at': 'Int64',
-            'creatinine': 'float64',
-            'Hb_A1C': 'float64',
-            'albumin': 'float64'
-        })
-        
-        
+
         successful_predictions = []
         errors = []
-        
-        
+
         for index, row in df.iterrows():
             try:
-               
+                # Prepare input data
                 input_data = row.to_dict()
+                # Convert NaNs to None
                 input_data = {k: (v if pd.notna(v) else None) for k, v in input_data.items()}
-                input_model = ModelInputCSV(**input_data)
-                
-                
+                # Create ModelInput instance
+                input_model = ModelInput(**input_data)
+
+                # Prepare data and make prediction
                 new_data = prepare_input_data(input_model)
-                predictions = make_prediction(robjects.globalenv['model'], new_data)
+                predictions = make_prediction(new_data)
                 prediction_result = extract_prediction_details(predictions, input_model.predict_at)
-                
+
                 # Store prediction in the database
                 store_prediction(db, input_model, prediction_result)
-                
+
                 # Append the prediction result to the list
                 successful_predictions.append({
                     "row_index": index,
@@ -506,7 +558,6 @@ def predict_csv(file: UploadFile = File(...), db: sqlite3.Connection = Depends(g
                     "prediction": prediction_result
                 })
             except Exception as e:
-                
                 logger.error(f"Error processing row {index}: {e}")
                 logger.debug("Traceback: %s", traceback.format_exc())
                 errors.append({
@@ -514,16 +565,16 @@ def predict_csv(file: UploadFile = File(...), db: sqlite3.Connection = Depends(g
                     "input_data": input_data,
                     "error": str(e)
                 })
-        
-        
+
         return {
             "successful_predictions": successful_predictions,
             "errors": errors
         }
-    
+
     except HTTPException as e:
         raise e  # Re-raise HTTPExceptions to return appropriate responses
-    
+
     except Exception as e:
         logger.error("Error processing CSV file: %s", traceback.format_exc())
         raise HTTPException(status_code=500, detail="Error processing CSV file")
+

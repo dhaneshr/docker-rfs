@@ -614,17 +614,15 @@
 
                 // Store API response
                 this.cifSeries = result.cif_series;   // CIF values for both events over time
-                this.chfSeries = result.chf_series;   // CHF values for both events over time
                 this.timePoints = result.time_interest; // Time points (ensure it's correctly received)
 
                 const cifEvent1Percentage = (result.cif_event1 * 100).toFixed(2);
 
                 // Debugging Logs to verify data
                 console.log('Time Points:', this.timePoints);
-                console.log('CIF Series Event 1:', this.cifSeries[0]);
-                console.log('CIF Series Event 2:', this.cifSeries[1]);
-                console.log('CHF Series Event 1:', this.chfSeries[0]);
-                console.log('CHF Series Event 2:', this.chfSeries[1]);
+                console.log('CIF for Foot Complication:', this.cifSeries[0]);
+                
+               
 
                 // Update HTML with CIF and CHF at the specified prediction time point
                 document.getElementById('computedTimePoint').textContent = this.formData.predict_at;
@@ -651,7 +649,7 @@
             console.log("Formatted Time Points (as integers):", formattedTimePoints);
 
             this.renderChart('cifChart', 'Cumulative Incidence Function (CIF)', this.cifSeries, 'cifChartInstance', formattedTimePoints);
-            //this.renderChart('chfChart', 'Cumulative Hazard Function (CHF)', this.chfSeries, 'chfChartInstance', formattedTimePoints);
+           
         },
 
         renderChart(canvasId, label, data, instanceProperty, formattedTimePoints) {
