@@ -504,25 +504,38 @@
 </div>
 
 
-                                <!-- Results Section -->
-                    <div class="mt-6" x-show="results.successful_predictions.length > 0 || results.errors.length > 0">
-                        <template x-if="results.successful_predictions.length > 0">
-                            <div>
-                                <h4 class="text-lg font-bold mb-2">Successful Predictions</h4>
-                                <div class="progress-bar-container">
-                                    <div class="progress-bar" :style="`width: ${(results.successful_predictions.length + results.errors.length) / totalRows * 100}%`"></div>
-                                </div>
-                                <div id="resultsTable" style="height: 400px;"></div> <!-- Tabulator container for successful predictions -->
+                  <!-- Results Section -->
+            <div class="mt-6 w-full">
+                <div x-show="results.successful_predictions.length > 0 || results.errors.length > 0">
+                    <template x-if="results.successful_predictions.length > 0">
+                        <div>
+                            <h4 class="text-lg font-bold mb-2">Successful Predictions</h4>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" :style="`width: ${(results.successful_predictions.length / totalRows) * 100}%`"></div>
                             </div>
-                        </template>
+                            <div id="resultsTable" style="height: 400px;"></div> <!-- Tabulator container for successful predictions -->
+                            <!-- Download Button -->
+                            <button @click="downloadResultsJSON('successful_predictions.json', results.successful_predictions)"
+                                class="bg-green-500 text-white px-4 py-2 rounded mt-4">
+                                Download Successful Predictions JSON
+                            </button>
+                        </div>
+                    </template>
 
-                        <template x-if="results.errors.length > 0">
-                            <div class="mt-8">
-                                <h4 class="text-lg font-bold mb-2 text-red-600">Errors</h4>
-                                <div id="errorsTable" style="height: 400px;"></div> <!-- Tabulator container for errors -->
-                            </div>
-                        </template>
-                    </div>
+                    <template x-if="results.errors.length > 0">
+                        <div class="mt-8">
+                            <h4 class="text-lg font-bold mb-2 text-red-600">Errors</h4>
+                            <div id="errorsTable" style="height: 400px;"></div> <!-- Tabulator container for errors -->
+                            <!-- Download Errors Button -->
+                            <button @click="downloadResultsJSON('errors.json', results.errors)"
+                                class="bg-red-500 text-white px-4 py-2 rounded mt-4">
+                                Download Errors JSON
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- JavaScript Functions -->
