@@ -266,7 +266,7 @@ def prepare_input_data(input: ModelInput) -> pd.DataFrame:
     logger.debug(f"DataFrame with spline components:\n{df}")
     return df
 
-def make_prediction(new_data: pd.DataFrame) -> dict:
+def make_prediction(new_data: pd.DataFrame, predict_at: int) -> dict:
     global global_model
     if global_model is None:
         raise RuntimeError("R model is not loaded.")
@@ -292,24 +292,24 @@ def make_prediction(new_data: pd.DataFrame) -> dict:
 
         predict_func = robjects.r['predict']
 
-        # Predict at 1-year time point
-        one_year_time = robjects.FloatVector([365.25])
-        one_year_prediction = predict_func(global_model, newdata=r_new_data, times=one_year_time)
+        # Predict at the specified time point (use predict_at from input)
+        prediction_time = robjects.FloatVector([predict_at])
+        single_timepoint_prediction = predict_func(global_model, newdata=r_new_data, times=prediction_time)
 
         # Convert to NumPy array
-        one_year_prediction_np = np.array(one_year_prediction)
-        logger.debug(f"one_year_prediction (NumPy array): {one_year_prediction_np}")
+        single_timepoint_prediction_np = np.array(single_timepoint_prediction)
+        logger.debug(f"single_timepoint_prediction (NumPy array): {single_timepoint_prediction_np}")
 
         # Extract the predicted value
-        if len(one_year_prediction_np) > 0:
-            one_year_risk = one_year_prediction_np[0]
+        if len(single_timepoint_prediction_np) > 0:
+            single_timepoint_risk = single_timepoint_prediction_np[0]
         else:
             raise ValueError("Prediction returned an empty array for one-year risk.")
 
-        logger.debug(f"Predicted risk at 1 year: {one_year_risk}")
+        logger.debug(f"Predicted risk at {predict_at} days: {single_timepoint_risk}")
 
         # Predict over multiple time points
-        time_points = np.arange(1, 365 * 5 + 1, 5)  # Up to 5 years in steps of 5 days
+        time_points = np.arange(1, predict_at * 3 + 1, 30)  # Up to predict_at days in steps of 30 days
         time_points_r = robjects.FloatVector(time_points)
         multiple_time_predictions = predict_func(global_model, newdata=r_new_data, times=time_points_r)
 
@@ -323,7 +323,7 @@ def make_prediction(new_data: pd.DataFrame) -> dict:
         time_points_list = time_points.tolist()
 
         return {
-            'one_year_risk': float(one_year_risk),
+            'single_timepoint_risk': float(single_timepoint_risk),
             'time_points': time_points_list,
             'predicted_risks': multiple_time_predictions_np.tolist()
         }
@@ -364,7 +364,8 @@ def extract_prediction_details(predictions, time_point: int) -> dict:
     '''
     # Prepare response with both the series and individual risk value
     prediction_result = {
-        "cif_event1": predictions['one_year_risk'], # cif_event_1 = prediction of foot complication at 1-year
+        "cif_event1": round(float(predictions['single_timepoint_risk']), 4),  # rounded to four decimal places
+        "time_interest": time_points.tolist(),
         "time_interest": time_points.tolist(),
         "cif_series": predicted_risks.tolist(),
     }
@@ -427,16 +428,20 @@ def predict(input: ModelInput, db: sqlite3.Connection = Depends(get_db)):
     try:
         new_data = prepare_input_data(input)
         logger.info("Prepared input data for prediction.")
-        predictions = make_prediction(new_data)
+        # Use predict_at from the input to make the prediction
+        predictions = make_prediction(new_data, predict_at=input.predict_at)
         logger.info("Prediction successful.")
+        
         # Extract relevant information for the prediction result (e.g., CIF at specified time point)
         prediction_result = extract_prediction_details(predictions, input.predict_at)
+        
         # Store prediction in the database
         store_prediction(db, input, prediction_result)
         return prediction_result
     except Exception as e:
         logger.error("Error during prediction: %s", traceback.format_exc())
         raise HTTPException(status_code=500, detail="Error during prediction.")
+
 
 @app.get("/logs")
 def get_logs(db: sqlite3.Connection = Depends(get_db)):
