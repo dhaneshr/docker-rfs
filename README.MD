@@ -133,7 +133,7 @@ docker run --rm your-image-name:arm64 uname -m    # Expected output: aarch64
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).
 
 Feel free to contribute, suggest improvements, or report issues!
 
@@ -149,3 +149,7 @@ Feel free to contribute, suggest improvements, or report issues!
 | Run the Container Locally             | `docker run -d -p 8000:8000 --name your-container-name your-image-name:multiarch`             | `podman run -d -p 8000:8000 --name your-container-name your-image-name:multiarch`             |
 
 
+## Note:
+
+- The main/develop branches contain implementations of the Random Survival Forest (minus the R-object file for model implementation)
+- The feature branch contains the implementation for the Fine-Gray model.
