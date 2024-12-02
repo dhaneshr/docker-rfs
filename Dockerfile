@@ -31,7 +31,7 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     liblz4-dev \
     libdeflate-dev && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Add architecture-specific logic (optional)
 RUN if [ "$TARGETARCH" = "arm64" ]; then \
@@ -54,8 +54,8 @@ ENV R_LIBS_SITE="/usr/local/lib/R/site-library"
 # Create a Python virtual environment and install Python dependencies
 COPY requirements.txt /app/requirements.txt
 RUN python -m venv /app/venv && \
-    /app/venv/bin/pip install --upgrade pip && \
-    /app/venv/bin/pip install -r /app/requirements.txt
+    /app/venv/bin/pip install --no-cache-dir --upgrade pip && \
+    /app/venv/bin/pip install --no-cache-dir -r /app/requirements.txt
 
 # Set work directory and copy application files
 WORKDIR /app

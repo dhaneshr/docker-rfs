@@ -350,18 +350,7 @@ def extract_prediction_details(predictions, time_point: int) -> dict:
     # Extract individual risk value at the requested time point
     risk_at_time = float(predicted_risks[time_index])
 
-    '''
-       # Prepare response with both the series and individual event values
-    prediction_result = {
-        "cif_series": cif_series,
-        "chf_series": chf_series,
-        "cif_event1": cif_event1_at_time,
-        "cif_event2": cif_event2_at_time,
-        "chf_event1": chf_event1_at_time,
-        "chf_event2": chf_event2_at_time,
-        "time_interest": time_interest.tolist()
-    }
-    '''
+
     # Prepare response with both the series and individual risk value
     prediction_result = {
         "cif_event1": round(float(predictions['single_timepoint_risk']), 4),  # rounded to four decimal places
