@@ -1,8 +1,10 @@
 FROM rocker/r-ver:4.4.0
 
-ENV DEBIAN_FRONTEND=noninteractive
+# Pass the architecture as an argument
+ARG TARGETARCH
+ENV TARGETARCH=$TARGETARCH
 
-# Install system dependencies and Miniconda
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     gfortran \
@@ -19,6 +21,9 @@ RUN apt-get update && apt-get install -y \
     libreadline-dev \
     libncurses5-dev \
     libgfortran5 \
+    python3.10 \
+    python3.10-venv \
+    python3.10-distutils \
     python3-pip \
     wget \
     libxt-dev \
@@ -26,12 +31,18 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     liblz4-dev \
     libdeflate-dev && \
-    wget https://repo.anaconda.com/miniconda/Miniconda3-py310_24.7.1-0-Linux-x86_64.sh -O /miniconda.sh && \
-    bash /miniconda.sh -b -p /opt/conda && \
-    rm /miniconda.sh && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ENV PATH="/opt/conda/bin:$PATH"
+# Add architecture-specific logic (optional)
+RUN if [ "$TARGETARCH" = "arm64" ]; then \
+        echo "Installing ARM64-specific libraries or packages"; \
+    else \
+        echo "Installing AMD64-specific libraries or packages"; \
+    fi
+
+# Update Python alternatives to point to Python 3.10
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 && \
+    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
 # Install R dependencies
 COPY R_dependencies.R /app/R_dependencies.R
@@ -40,11 +51,11 @@ RUN Rscript /app/R_dependencies.R && \
 
 ENV R_LIBS_SITE="/usr/local/lib/R/site-library"
 
-# Install Python dependencies
+# Create a Python virtual environment and install Python dependencies
 COPY requirements.txt /app/requirements.txt
-RUN conda create -n fastapi-env python=3.10 -y && \
-    conda run -n fastapi-env pip install -r /app/requirements.txt && \
-    conda clean -afy
+RUN python -m venv /app/venv && \
+    /app/venv/bin/pip install --no-cache-dir --upgrade pip && \
+    /app/venv/bin/pip install --no-cache-dir -r /app/requirements.txt
 
 # Set work directory and copy application files
 WORKDIR /app
@@ -64,4 +75,4 @@ RUN chmod -R 755 /app/resources /app/local_data /app/static
 EXPOSE 8000
 
 # Command to run the FastAPI app
-CMD ["/bin/bash", "-c", "source activate fastapi-env && uvicorn app:app --host 0.0.0.0 --port 8000"]
+CMD ["/bin/bash", "-c", "source /app/venv/bin/activate && uvicorn app:app --host 0.0.0.0 --port 8000"]
